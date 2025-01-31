@@ -3,6 +3,7 @@ import { Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { ToolData, Category, Year, Month } from '../types/data';
+import { Progress } from "@/components/ui/progress";
 
 interface FileUploadProps {
   onDataLoaded: (data: ToolData[]) => void;
@@ -10,6 +11,8 @@ interface FileUploadProps {
 
 export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -42,49 +45,49 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
   const processExcelData = (jsonData: any[]): { data: ToolData[], skippedRows: number } => {
     const toolsMap = new Map<string, ToolData>();
     let skippedRows = 0;
+    const totalRows = jsonData.length;
     
     jsonData.forEach((row, index) => {
-      const tool = row.Tool?.toString();
-      const category = row.Category?.toString();
-      
-      if (!tool || !category) {
-        console.warn(`Zeile ${index + 1}: Fehlender Tool-Name oder Kategorie`);
-        skippedRows++;
-        return;
-      }
-
-      if (!validateCategory(category)) {
-        console.warn(`Zeile ${index + 1}: Ungültige Kategorie: ${category}`);
-        skippedRows++;
-        return;
-      }
-
-      let toolData = toolsMap.get(tool) || {
-        id: `tool-${index}`,
-        tool,
-        category,
-        prices: {}
-      };
-
-      // Verarbeite die monatlichen Preise für jedes Jahr
-      ['2023', '2024', '2025'].forEach((year) => {
-        if (!toolData.prices[year]) {
-          toolData.prices[year] = {};
+      try {
+        setProgress(Math.round((index / totalRows) * 100));
+        
+        const tool = row.Tool?.toString() || '';
+        const category = row.Category?.toString() || '';
+        
+        if (!tool || !validateCategory(category)) {
+          console.warn(`Zeile ${index + 1}: Ungültige Daten - Tool: ${tool}, Kategorie: ${category}`);
+          skippedRows++;
+          return;
         }
 
-        // Verarbeite jeden Monat
-        Array.from({ length: 12 }, (_, i) => {
-          const month = `${i + 1}`.padStart(2, '0') as Month;
-          const columnName = `${year}_${month}`;
-          const price = parseFloat(row[columnName]);
-          
-          if (!isNaN(price)) {
-            toolData.prices[year][month] = price;
-          }
-        });
-      });
+        let toolData = toolsMap.get(tool) || {
+          id: `tool-${index}`,
+          tool,
+          category: category as Category,
+          prices: {} as Record<Year, Record<Month, number>>
+        };
 
-      toolsMap.set(tool, toolData);
+        ['2023', '2024', '2025'].forEach((year) => {
+          if (!toolData.prices[year]) {
+            toolData.prices[year] = {};
+          }
+
+          Array.from({ length: 12 }, (_, i) => {
+            const month = `${i + 1}`.padStart(2, '0') as Month;
+            const columnName = `${year}_${month}`;
+            const price = parseFloat(row[columnName]);
+            
+            if (!isNaN(price)) {
+              toolData.prices[year][month] = price;
+            }
+          });
+        });
+
+        toolsMap.set(tool, toolData);
+      } catch (error) {
+        console.warn(`Fehler beim Verarbeiten von Zeile ${index + 1}:`, error);
+        skippedRows++;
+      }
     });
 
     return {
@@ -95,13 +98,17 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
 
   const handleFile = async (file: File) => {
     try {
+      setIsLoading(true);
+      setProgress(0);
+      
       const reader = new FileReader();
       
       reader.onload = (e) => {
         try {
           const data = e.target?.result;
           if (!data) {
-            throw new Error('Keine Daten gefunden');
+            toast.error('Keine Daten gefunden');
+            return;
           }
           
           const workbook = XLSX.read(data, { type: 'binary' });
@@ -116,64 +123,76 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
           const { data: processedData, skippedRows } = processExcelData(jsonData);
           
           if (processedData.length === 0) {
-            toast.error('Keine gültigen Daten gefunden. Bitte überprüfen Sie das Dateiformat.');
-            return;
-          }
-
-          onDataLoaded(processedData);
-          
-          if (skippedRows > 0) {
-            toast.warning(`${processedData.length} Tools geladen, ${skippedRows} fehlerhafte Zeilen übersprungen`);
+            toast.warning('Keine gültigen Daten gefunden. Alle Zeilen wurden übersprungen.');
           } else {
-            toast.success(`${processedData.length} Tools erfolgreich geladen`);
+            onDataLoaded(processedData);
+            if (skippedRows > 0) {
+              toast.warning(`${processedData.length} Tools geladen, ${skippedRows} fehlerhafte Zeilen übersprungen`);
+            } else {
+              toast.success(`${processedData.length} Tools erfolgreich geladen`);
+            }
           }
           
         } catch (error) {
-          console.error('Error processing file data:', error);
-          toast.error('Fehler beim Verarbeiten der Datei');
+          console.error('Fehler beim Verarbeiten der Datei:', error);
+          toast.error('Die Datei konnte nicht vollständig verarbeitet werden');
+        } finally {
+          setIsLoading(false);
+          setProgress(100);
+          setTimeout(() => setProgress(0), 500);
         }
       };
 
       reader.onerror = () => {
         toast.error('Fehler beim Lesen der Datei');
+        setIsLoading(false);
       };
 
       reader.readAsBinaryString(file);
     } catch (error) {
-      console.error('Error handling file:', error);
+      console.error('Fehler beim Verarbeiten der Datei:', error);
       toast.error('Fehler beim Verarbeiten der Datei');
+      setIsLoading(false);
     }
   };
 
   return (
-    <div
-      className={`w-full max-w-2xl mx-auto p-8 border-2 border-dashed rounded-lg transition-colors ${
-        isDragging ? 'border-primary bg-primary/5' : 'border-gray-300'
-      }`}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
-      <div className="flex flex-col items-center justify-center space-y-4">
-        <Upload className="w-12 h-12 text-primary" />
-        <h3 className="text-lg font-semibold">Excel-Datei hier ablegen</h3>
-        <p className="text-sm text-gray-500">oder</p>
-        <label className="cursor-pointer">
-          <span className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90 transition-colors">
-            Datei auswählen
-          </span>
-          <input
-            type="file"
-            className="hidden"
-            accept=".xlsx"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleFile(file);
-            }}
-          />
-        </label>
-        <p className="text-xs text-gray-400">Unterstützt nur .xlsx Dateien</p>
+    <div className="space-y-4">
+      <div
+        className={`w-full max-w-2xl mx-auto p-8 border-2 border-dashed rounded-lg transition-colors ${
+          isDragging ? 'border-primary bg-primary/5' : 'border-gray-300'
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <div className="flex flex-col items-center justify-center space-y-4">
+          <Upload className="w-12 h-12 text-primary" />
+          <h3 className="text-lg font-semibold">Excel-Datei hier ablegen</h3>
+          <p className="text-sm text-gray-500">oder</p>
+          <label className="cursor-pointer">
+            <span className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90 transition-colors">
+              Datei auswählen
+            </span>
+            <input
+              type="file"
+              className="hidden"
+              accept=".xlsx"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFile(file);
+              }}
+            />
+          </label>
+          <p className="text-xs text-gray-400">Unterstützt nur .xlsx Dateien</p>
+        </div>
       </div>
+      {isLoading && (
+        <div className="w-full max-w-2xl mx-auto">
+          <Progress value={progress} className="w-full" />
+          <p className="text-sm text-center text-gray-500 mt-2">Datei wird verarbeitet...</p>
+        </div>
+      )}
     </div>
   );
 };
