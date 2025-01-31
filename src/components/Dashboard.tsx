@@ -2,57 +2,64 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { ResponsiveSankey } from '@nivo/sankey';
 import { ResponsiveChord } from '@nivo/chord';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-type ShoeData = {
-  id: string;
-  name: string;
-  category: string;
-  size: string;
-  price: number;
-  availability: number;
-  country_code: string;
-  currency: string;
-  date: string;
-};
+import { ToolData } from '../types/data';
 
 interface DashboardProps {
-  data: ShoeData[];
+  data: ToolData[];
 }
 
 // Mock data for initial display
-const mockData: ShoeData[] = [
+const mockData: ToolData[] = [
   {
     id: "mock-1",
-    name: "Nike Air Max",
-    category: "Sneaker",
-    size: "42",
-    price: 129.99,
-    availability: 1,
-    country_code: "DE",
-    currency: "EUR",
-    date: new Date().toISOString().split('T')[0],
+    tool: "Tool A",
+    category: "IWC",
+    prices: {
+      '2023': {
+        '01': 100,
+        '02': 110,
+        '03': 120
+      },
+      '2024': {
+        '01': 130,
+        '02': 140,
+        '03': 150
+      }
+    }
   },
   {
     id: "mock-2",
-    name: "Adidas Superstar",
-    category: "Lifestyle",
-    size: "41",
-    price: 99.99,
-    availability: 1,
-    country_code: "DE",
-    currency: "EUR",
-    date: new Date().toISOString().split('T')[0],
+    tool: "Tool B",
+    category: "EWC",
+    prices: {
+      '2023': {
+        '01': 90,
+        '02': 95,
+        '03': 100
+      },
+      '2024': {
+        '01': 105,
+        '02': 110,
+        '03': 115
+      }
+    }
   },
   {
     id: "mock-3",
-    name: "Puma RS-X",
-    category: "Sport",
-    size: "43",
-    price: 89.99,
-    availability: 1,
-    country_code: "DE",
-    currency: "EUR",
-    date: new Date().toISOString().split('T')[0],
+    tool: "Tool C",
+    category: "IWR",
+    prices: {
+      '2023': {
+        '01': 80,
+        '02': 85,
+        '03': 90
+      },
+      '2024': {
+        '01': 95,
+        '02': 100,
+        '03': 105
+      }
+    }
   }
 ];
 
@@ -60,13 +67,20 @@ export const Dashboard = ({ data }: DashboardProps) => {
   // Use mock data if no real data is present
   const displayData = data.length > 0 ? data : mockData;
 
-  // Calculate averages for the current display data
+  // Calculate average prices by category for the current year
+  const currentYear = new Date().getFullYear().toString();
   const averagePricesByCategory = displayData.reduce((acc, item) => {
     if (!acc[item.category]) {
       acc[item.category] = { total: 0, count: 0 };
     }
-    acc[item.category].total += item.price;
-    acc[item.category].count += 1;
+    
+    const yearPrices = item.prices[currentYear];
+    if (yearPrices) {
+      const yearAvg = Object.values(yearPrices).reduce((sum, price) => sum + price, 0) / Object.values(yearPrices).length;
+      acc[item.category].total += yearAvg;
+      acc[item.category].count += 1;
+    }
+    
     return acc;
   }, {} as Record<string, { total: number; count: number }>);
 
@@ -76,33 +90,48 @@ export const Dashboard = ({ data }: DashboardProps) => {
   }));
 
   // Calculate total statistics
-  const totalProducts = displayData.length;
-  const availableProducts = displayData.filter(item => item.availability === 1).length;
-  const averagePrice = Math.round(displayData.reduce((sum, item) => sum + item.price, 0) / displayData.length);
+  const totalTools = displayData.length;
+  const totalCategories = new Set(displayData.map(item => item.category)).size;
+  const averagePrice = Math.round(
+    displayData.reduce((sum, item) => {
+      const yearPrices = item.prices[currentYear];
+      if (yearPrices) {
+        return sum + (Object.values(yearPrices).reduce((s, p) => s + p, 0) / Object.values(yearPrices).length);
+      }
+      return sum;
+    }, 0) / displayData.length
+  );
 
   // Prepare Sankey data
   const categories = [...new Set(displayData.map(d => d.category))];
-  const sizes = [...new Set(displayData.map(d => d.size))];
+  const years = ['2023', '2024', '2025'];
   
   const sankeyData = {
     nodes: [
       ...categories.map(id => ({ id })),
-      ...sizes.map(id => ({ id }))
+      ...years.map(id => ({ id }))
     ],
     links: displayData.reduce((acc, item) => {
-      const existingLink = acc.find(l => 
-        l.source === item.category && l.target === item.size
-      );
-      
-      if (existingLink) {
-        existingLink.value += 1;
-      } else {
-        acc.push({
-          source: item.category,
-          target: item.size,
-          value: 1
-        });
-      }
+      years.forEach(year => {
+        if (item.prices[year]) {
+          const yearAvg = Object.values(item.prices[year]).reduce((sum, price) => sum + price, 0) / 
+                         Object.values(item.prices[year]).length;
+          
+          const existingLink = acc.find(l => 
+            l.source === item.category && l.target === year
+          );
+          
+          if (existingLink) {
+            existingLink.value += yearAvg;
+          } else {
+            acc.push({
+              source: item.category,
+              target: year,
+              value: yearAvg
+            });
+          }
+        }
+      });
       return acc;
     }, [] as { source: string; target: string; value: number }[])
   };
@@ -113,10 +142,24 @@ export const Dashboard = ({ data }: DashboardProps) => {
       if (cat1 === cat2) return 0;
       const price1 = displayData
         .filter(d => d.category === cat1)
-        .reduce((sum, d) => sum + d.price, 0);
+        .reduce((sum, d) => {
+          const yearPrices = d.prices[currentYear];
+          if (yearPrices) {
+            return sum + Object.values(yearPrices).reduce((s, p) => s + p, 0);
+          }
+          return sum;
+        }, 0);
+      
       const price2 = displayData
         .filter(d => d.category === cat2)
-        .reduce((sum, d) => sum + d.price, 0);
+        .reduce((sum, d) => {
+          const yearPrices = d.prices[currentYear];
+          if (yearPrices) {
+            return sum + Object.values(yearPrices).reduce((s, p) => s + p, 0);
+          }
+          return sum;
+        }, 0);
+      
       return Math.round((price1 + price2) / 2);
     })
   );
@@ -125,12 +168,12 @@ export const Dashboard = ({ data }: DashboardProps) => {
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-2">Produkte Gesamt</h3>
-          <p className="text-3xl font-bold text-primary">{totalProducts}</p>
+          <h3 className="text-lg font-semibold mb-2">Tools Gesamt</h3>
+          <p className="text-3xl font-bold text-primary">{totalTools}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-2">Verfügbare Produkte</h3>
-          <p className="text-3xl font-bold text-green-600">{availableProducts}</p>
+          <h3 className="text-lg font-semibold mb-2">Kategorien</h3>
+          <p className="text-3xl font-bold text-green-600">{totalCategories}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-semibold mb-2">Durchschnittspreis</h3>
@@ -162,7 +205,7 @@ export const Dashboard = ({ data }: DashboardProps) => {
           </TabsContent>
 
           <TabsContent value="sankey" className="mt-6">
-            <h3 className="text-lg font-semibold mb-4">Kategorie-Größen Beziehungen</h3>
+            <h3 className="text-lg font-semibold mb-4">Kategorie-Jahr Beziehungen</h3>
             <div className="h-[500px]">
               <ResponsiveSankey
                 data={sankeyData}

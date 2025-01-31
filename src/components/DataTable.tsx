@@ -9,33 +9,22 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Search } from 'lucide-react';
-
-type ShoeData = {
-  id: string;
-  name: string;
-  category: string;
-  size: string;
-  price: number;
-  availability: number;
-  country_code: string;
-  currency: string;
-  date: string;
-};
+import { ToolData } from '../types/data';
 
 interface DataTableProps {
-  initialData: ShoeData[];
+  initialData: ToolData[];
 }
 
 export const DataTable = ({ initialData }: DataTableProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [data, setData] = useState<ShoeData[]>(initialData);
+  const [data, setData] = useState<ToolData[]>(initialData);
 
   useEffect(() => {
     setData(initialData);
   }, [initialData]);
 
   const filteredData = data.filter(item => 
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.tool.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -44,7 +33,7 @@ export const DataTable = ({ initialData }: DataTableProps) => {
       <div className="relative">
         <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
         <Input
-          placeholder="Nach Name oder ID suchen..."
+          placeholder="Nach Tool oder ID suchen..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
@@ -56,34 +45,34 @@ export const DataTable = ({ initialData }: DataTableProps) => {
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>
-              <TableHead>Name</TableHead>
+              <TableHead>Tool</TableHead>
               <TableHead>Kategorie</TableHead>
-              <TableHead>Größe</TableHead>
-              <TableHead>Preis</TableHead>
-              <TableHead>Verfügbarkeit</TableHead>
-              <TableHead>Land</TableHead>
-              <TableHead>Währung</TableHead>
-              <TableHead>Datum</TableHead>
+              <TableHead>Preise (2023)</TableHead>
+              <TableHead>Preise (2024)</TableHead>
+              <TableHead>Preise (2025)</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredData.map((item) => (
               <TableRow key={item.id}>
                 <TableCell>{item.id}</TableCell>
-                <TableCell>{item.name}</TableCell>
+                <TableCell>{item.tool}</TableCell>
                 <TableCell>{item.category}</TableCell>
-                <TableCell>{item.size}</TableCell>
-                <TableCell>{item.price}</TableCell>
                 <TableCell>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    item.availability ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {item.availability ? 'Verfügbar' : 'Nicht verfügbar'}
-                  </span>
+                  {Object.entries(item.prices['2023'] || {})
+                    .map(([month, price]) => `${month}: €${price}`)
+                    .join(', ')}
                 </TableCell>
-                <TableCell>{item.country_code}</TableCell>
-                <TableCell>{item.currency}</TableCell>
-                <TableCell>{item.date}</TableCell>
+                <TableCell>
+                  {Object.entries(item.prices['2024'] || {})
+                    .map(([month, price]) => `${month}: €${price}`)
+                    .join(', ')}
+                </TableCell>
+                <TableCell>
+                  {Object.entries(item.prices['2025'] || {})
+                    .map(([month, price]) => `${month}: €${price}`)
+                    .join(', ')}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

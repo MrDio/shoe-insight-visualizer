@@ -3,23 +3,12 @@ import { FileUpload } from '@/components/FileUpload';
 import { DataTable } from '@/components/DataTable';
 import { Dashboard } from '@/components/Dashboard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-type ShoeData = {
-  id: string;
-  name: string;
-  category: string;
-  size: string;
-  price: number;
-  availability: number;
-  country_code: string;
-  currency: string;
-  date: string;
-};
+import { ToolData } from '../types/data';
 
 const Index = () => {
-  const [data, setData] = useState<ShoeData[]>([]);
+  const [data, setData] = useState<ToolData[]>([]);
 
-  const handleDataLoaded = (newData: ShoeData[]) => {
+  const handleDataLoaded = (newData: ToolData[]) => {
     setData(newData);
   };
 
@@ -27,7 +16,7 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white border-b">
         <div className="container py-6">
-          <h1 className="text-2xl font-bold text-primary">Schuh-Daten Analyse</h1>
+          <h1 className="text-2xl font-bold text-primary">Tool-Daten Analyse</h1>
         </div>
       </header>
 
