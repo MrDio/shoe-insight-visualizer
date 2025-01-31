@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Table,
   TableBody,
@@ -22,34 +22,17 @@ type ShoeData = {
   date: string;
 };
 
-const mockData: ShoeData[] = [
-  {
-    id: "HP9426",
-    name: "Breaknet 2.0 Schuh",
-    category: "Sneakers",
-    size: "42",
-    price: 60.0,
-    availability: 1,
-    country_code: "DE",
-    currency: "EUR",
-    date: "2025-01-07"
-  },
-  {
-    id: "HQ4199",
-    name: "Ultraboost 1.0 Laufschuh",
-    category: "Running",
-    size: "44",
-    price: 180.0,
-    availability: 1,
-    country_code: "US",
-    currency: "USD",
-    date: "2025-06-25"
-  }
-];
+interface DataTableProps {
+  initialData: ShoeData[];
+}
 
-export const DataTable = () => {
+export const DataTable = ({ initialData }: DataTableProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [data] = useState<ShoeData[]>(mockData);
+  const [data, setData] = useState<ShoeData[]>(initialData);
+
+  useEffect(() => {
+    setData(initialData);
+  }, [initialData]);
 
   const filteredData = data.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -61,7 +44,7 @@ export const DataTable = () => {
       <div className="relative">
         <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
         <Input
-          placeholder="Search by name or ID..."
+          placeholder="Nach Name oder ID suchen..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
@@ -74,13 +57,13 @@ export const DataTable = () => {
             <TableRow>
               <TableHead>ID</TableHead>
               <TableHead>Name</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Size</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Availability</TableHead>
-              <TableHead>Country</TableHead>
-              <TableHead>Currency</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead>Kategorie</TableHead>
+              <TableHead>Größe</TableHead>
+              <TableHead>Preis</TableHead>
+              <TableHead>Verfügbarkeit</TableHead>
+              <TableHead>Land</TableHead>
+              <TableHead>Währung</TableHead>
+              <TableHead>Datum</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -95,7 +78,7 @@ export const DataTable = () => {
                   <span className={`px-2 py-1 rounded-full text-xs ${
                     item.availability ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}>
-                    {item.availability ? 'Available' : 'Not Available'}
+                    {item.availability ? 'Verfügbar' : 'Nicht verfügbar'}
                   </span>
                 </TableCell>
                 <TableCell>{item.country_code}</TableCell>

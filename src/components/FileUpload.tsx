@@ -1,8 +1,25 @@
 import { useState } from 'react';
 import { Upload } from 'lucide-react';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
-export const FileUpload = () => {
+type ShoeData = {
+  id: string;
+  name: string;
+  category: string;
+  size: string;
+  price: number;
+  availability: number;
+  country_code: string;
+  currency: string;
+  date: string;
+};
+
+interface FileUploadProps {
+  onDataLoaded: (data: ShoeData[]) => void;
+}
+
+export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -24,14 +41,41 @@ export const FileUpload = () => {
       if (file.name.endsWith('.xlsx')) {
         handleFile(file);
       } else {
-        toast.error('Please upload an Excel (.xlsx) file');
+        toast.error('Bitte laden Sie eine Excel (.xlsx) Datei hoch');
       }
     }
   };
 
-  const handleFile = (file: File) => {
-    // TODO: Implement file processing
-    toast.success(`File "${file.name}" uploaded successfully`);
+  const handleFile = async (file: File) => {
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet) as ShoeData[];
+      
+      if (jsonData.length === 0) {
+        toast.error('Die Excel-Datei enthält keine Daten');
+        return;
+      }
+
+      // Validate required fields
+      const isValidData = jsonData.every(item => 
+        item.id && item.name && item.category && 
+        item.size && typeof item.price === 'number' &&
+        typeof item.availability === 'number'
+      );
+
+      if (!isValidData) {
+        toast.error('Die Excel-Datei enthält ungültige oder fehlende Daten');
+        return;
+      }
+
+      onDataLoaded(jsonData);
+      toast.success(`Datei "${file.name}" erfolgreich hochgeladen`);
+    } catch (error) {
+      console.error('Error processing file:', error);
+      toast.error('Fehler beim Verarbeiten der Datei');
+    }
   };
 
   return (
@@ -45,11 +89,11 @@ export const FileUpload = () => {
     >
       <div className="flex flex-col items-center justify-center space-y-4">
         <Upload className="w-12 h-12 text-primary" />
-        <h3 className="text-lg font-semibold">Drag and drop your Excel file here</h3>
-        <p className="text-sm text-gray-500">or</p>
+        <h3 className="text-lg font-semibold">Excel-Datei hier ablegen</h3>
+        <p className="text-sm text-gray-500">oder</p>
         <label className="cursor-pointer">
           <span className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90 transition-colors">
-            Browse Files
+            Datei auswählen
           </span>
           <input
             type="file"
@@ -61,7 +105,7 @@ export const FileUpload = () => {
             }}
           />
         </label>
-        <p className="text-xs text-gray-400">Supports .xlsx files only</p>
+        <p className="text-xs text-gray-400">Unterstützt nur .xlsx Dateien</p>
       </div>
     </div>
   );
