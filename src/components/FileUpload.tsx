@@ -46,15 +46,18 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
     }
   };
 
-  const isValidRow = (row: any): row is ShoeData => {
-    return (
-      row.id && 
-      row.name && 
-      row.category && 
-      row.size && 
-      typeof row.price === 'number' &&
-      (row.availability === 0 || row.availability === 1)
-    );
+  const processRow = (row: any): ShoeData => {
+    return {
+      id: row.id?.toString() || 'N/A',
+      name: row.name?.toString() || 'Unbekannt',
+      category: row.category?.toString() || 'Sonstige',
+      size: row.size?.toString() || 'N/A',
+      price: Number(row.price) || 0,
+      availability: row.availability === 1 ? 1 : 0,
+      country_code: row.country_code?.toString() || 'DE',
+      currency: row.currency?.toString() || 'EUR',
+      date: row.date?.toString() || new Date().toISOString().split('T')[0],
+    };
   };
 
   const handleFile = async (file: File) => {
@@ -69,20 +72,11 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
         return;
       }
 
-      // Filter valid rows
-      const validData = jsonData.filter(isValidRow);
+      // Verarbeite alle Reihen und setze Standardwerte für fehlende Daten
+      const processedData = jsonData.map(processRow);
 
-      if (validData.length === 0) {
-        toast.error('Keine gültigen Daten in der Excel-Datei gefunden');
-        return;
-      }
-
-      if (validData.length < jsonData.length) {
-        toast.warning(`${jsonData.length - validData.length} ungültige Datenreihen wurden übersprungen`);
-      }
-
-      onDataLoaded(validData);
-      toast.success(`${validData.length} Datenreihen erfolgreich geladen`);
+      onDataLoaded(processedData);
+      toast.success(`${processedData.length} Datenreihen erfolgreich geladen`);
     } catch (error) {
       console.error('Error processing file:', error);
       toast.error('Fehler beim Verarbeiten der Datei');
