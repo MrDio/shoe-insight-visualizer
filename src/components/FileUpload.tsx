@@ -2,21 +2,10 @@ import { useState } from 'react';
 import { Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
-
-type ShoeData = {
-  id: string;
-  name: string;
-  category: string;
-  size: string;
-  price: number;
-  availability: number;
-  country_code: string;
-  currency: string;
-  date: string;
-};
+import { ToolData, Category, Year, Month } from '../types/data';
 
 interface FileUploadProps {
-  onDataLoaded: (data: ShoeData[]) => void;
+  onDataLoaded: (data: ToolData[]) => void;
 }
 
 export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
@@ -46,38 +35,56 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
     }
   };
 
-  const processRow = (row: any, index: number): ShoeData => {
-    // Generiere eine eindeutige ID falls keine vorhanden
-    const uniqueId = row.id?.toString() || `generated-id-${index}`;
+  const validateCategory = (category: string): category is Category => {
+    return ['IWC', 'EWC', 'IWR', 'EWR'].includes(category);
+  };
+
+  const processExcelData = (jsonData: any[]): ToolData[] => {
+    const toolsMap = new Map<string, ToolData>();
     
-    // Extrahiere Werte oder setze Standardwerte
-    const name = row.name?.toString() || `Produkt ${index + 1}`;
-    const category = row.category?.toString() || 'Allgemein';
-    const size = row.size?.toString() || 'Universal';
-    
-    // Versuche den Preis zu parsen, mit Fallback auf 0
-    let price = 0;
-    if (row.price !== undefined) {
-      const parsedPrice = parseFloat(row.price.toString().replace(',', '.'));
-      if (!isNaN(parsedPrice)) {
-        price = parsedPrice;
+    jsonData.forEach((row, index) => {
+      const tool = row.Tool?.toString();
+      const category = row.Category?.toString();
+      
+      if (!tool || !category) {
+        console.warn(`Zeile ${index + 1}: Fehlender Tool-Name oder Kategorie`);
+        return;
       }
-    }
 
-    // Setze Verfügbarkeit auf 1 (verfügbar) als Standard
-    const availability = row.availability === 0 ? 0 : 1;
+      if (!validateCategory(category)) {
+        console.warn(`Zeile ${index + 1}: Ungültige Kategorie: ${category}`);
+        return;
+      }
 
-    return {
-      id: uniqueId,
-      name: name,
-      category: category,
-      size: size,
-      price: price,
-      availability: availability,
-      country_code: row.country_code?.toString() || 'DE',
-      currency: row.currency?.toString() || 'EUR',
-      date: row.date?.toString() || new Date().toISOString().split('T')[0],
-    };
+      let toolData = toolsMap.get(tool) || {
+        id: `tool-${index}`,
+        tool,
+        category,
+        prices: {}
+      };
+
+      // Verarbeite die monatlichen Preise für jedes Jahr
+      ['2023', '2024', '2025'].forEach((year) => {
+        if (!toolData.prices[year]) {
+          toolData.prices[year] = {};
+        }
+
+        // Verarbeite jeden Monat
+        Array.from({ length: 12 }, (_, i) => {
+          const month = `${i + 1}`.padStart(2, '0') as Month;
+          const columnName = `${year}_${month}`;
+          const price = parseFloat(row[columnName]);
+          
+          if (!isNaN(price)) {
+            toolData.prices[year][month] = price;
+          }
+        });
+      });
+
+      toolsMap.set(tool, toolData);
+    });
+
+    return Array.from(toolsMap.values());
   };
 
   const handleFile = async (file: File) => {
@@ -93,31 +100,23 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
           
           const workbook = XLSX.read(data, { type: 'binary' });
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
           
           if (jsonData.length === 0) {
-            // Selbst wenn keine Daten gefunden wurden, erstellen wir einen Beispieldatensatz
-            const dummyData: ShoeData[] = [{
-              id: 'example-1',
-              name: 'Beispielprodukt',
-              category: 'Allgemein',
-              size: 'Universal',
-              price: 0,
-              availability: 1,
-              country_code: 'DE',
-              currency: 'EUR',
-              date: new Date().toISOString().split('T')[0],
-            }];
-            onDataLoaded(dummyData);
-            toast.warning('Keine Daten in der Excel-Datei gefunden. Ein Beispieldatensatz wurde geladen.');
+            toast.warning('Keine Daten in der Excel-Datei gefunden.');
             return;
           }
 
-          // Verarbeite alle Reihen und setze Standardwerte für fehlende Daten
-          const processedData = jsonData.map((row, index) => processRow(row, index));
+          const processedData = processExcelData(jsonData);
+          
+          if (processedData.length === 0) {
+            toast.error('Keine gültigen Daten gefunden. Bitte überprüfen Sie das Dateiformat.');
+            return;
+          }
 
           onDataLoaded(processedData);
-          toast.success(`${processedData.length} Datenreihen erfolgreich geladen`);
+          toast.success(`${processedData.length} Tools erfolgreich geladen`);
+          
         } catch (error) {
           console.error('Error processing file data:', error);
           toast.error('Fehler beim Verarbeiten der Datei');
