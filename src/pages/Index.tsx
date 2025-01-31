@@ -24,14 +24,14 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white border-b">
         <div className="container py-6">
           <h1 className="text-2xl font-bold text-primary">Schuh-Daten Analyse</h1>
         </div>
       </header>
 
-      <main className="container py-8 space-y-8">
+      <main className="container py-8 space-y-8 flex-grow">
         <FileUpload onDataLoaded={handleDataLoaded} />
         
         <Tabs defaultValue="table" className="w-full">
@@ -47,6 +47,12 @@ const Index = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      <footer className="bg-white border-t py-2">
+        <div className="container text-right">
+          <span className="text-xs text-gray-400">Build: {import.meta.env.VITE_BUILD_NUMBER || '0'}</span>
+        </div>
+      </footer>
     </div>
   );
 };
