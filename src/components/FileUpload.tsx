@@ -46,14 +46,34 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
     }
   };
 
-  const processRow = (row: any): ShoeData => {
+  const processRow = (row: any, index: number): ShoeData => {
+    // Generiere eine eindeutige ID falls keine vorhanden
+    const uniqueId = row.id?.toString() || `generated-id-${index}`;
+    
+    // Extrahiere Werte oder setze Standardwerte
+    const name = row.name?.toString() || `Produkt ${index + 1}`;
+    const category = row.category?.toString() || 'Allgemein';
+    const size = row.size?.toString() || 'Universal';
+    
+    // Versuche den Preis zu parsen, mit Fallback auf 0
+    let price = 0;
+    if (row.price !== undefined) {
+      const parsedPrice = parseFloat(row.price.toString().replace(',', '.'));
+      if (!isNaN(parsedPrice)) {
+        price = parsedPrice;
+      }
+    }
+
+    // Setze Verfügbarkeit auf 1 (verfügbar) als Standard
+    const availability = row.availability === 0 ? 0 : 1;
+
     return {
-      id: row.id?.toString() || 'N/A',
-      name: row.name?.toString() || 'Unbekannt',
-      category: row.category?.toString() || 'Sonstige',
-      size: row.size?.toString() || 'N/A',
-      price: Number(row.price) || 0,
-      availability: row.availability === 1 ? 1 : 0,
+      id: uniqueId,
+      name: name,
+      category: category,
+      size: size,
+      price: price,
+      availability: availability,
       country_code: row.country_code?.toString() || 'DE',
       currency: row.currency?.toString() || 'EUR',
       date: row.date?.toString() || new Date().toISOString().split('T')[0],
@@ -68,12 +88,25 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
       const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
       
       if (jsonData.length === 0) {
-        toast.error('Die Excel-Datei enthält keine Daten');
+        // Selbst wenn keine Daten gefunden wurden, erstellen wir einen Beispieldatensatz
+        const dummyData: ShoeData[] = [{
+          id: 'example-1',
+          name: 'Beispielprodukt',
+          category: 'Allgemein',
+          size: 'Universal',
+          price: 0,
+          availability: 1,
+          country_code: 'DE',
+          currency: 'EUR',
+          date: new Date().toISOString().split('T')[0],
+        }];
+        onDataLoaded(dummyData);
+        toast.warning('Keine Daten in der Excel-Datei gefunden. Ein Beispieldatensatz wurde geladen.');
         return;
       }
 
       // Verarbeite alle Reihen und setze Standardwerte für fehlende Daten
-      const processedData = jsonData.map(processRow);
+      const processedData = jsonData.map((row, index) => processRow(row, index));
 
       onDataLoaded(processedData);
       toast.success(`${processedData.length} Datenreihen erfolgreich geladen`);
