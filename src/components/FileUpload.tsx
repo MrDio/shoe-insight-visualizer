@@ -39,8 +39,9 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
     return ['IWC', 'EWC', 'IWR', 'EWR'].includes(category);
   };
 
-  const processExcelData = (jsonData: any[]): ToolData[] => {
+  const processExcelData = (jsonData: any[]): { data: ToolData[], skippedRows: number } => {
     const toolsMap = new Map<string, ToolData>();
+    let skippedRows = 0;
     
     jsonData.forEach((row, index) => {
       const tool = row.Tool?.toString();
@@ -48,11 +49,13 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
       
       if (!tool || !category) {
         console.warn(`Zeile ${index + 1}: Fehlender Tool-Name oder Kategorie`);
+        skippedRows++;
         return;
       }
 
       if (!validateCategory(category)) {
         console.warn(`Zeile ${index + 1}: Ungültige Kategorie: ${category}`);
+        skippedRows++;
         return;
       }
 
@@ -84,7 +87,10 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
       toolsMap.set(tool, toolData);
     });
 
-    return Array.from(toolsMap.values());
+    return {
+      data: Array.from(toolsMap.values()),
+      skippedRows
+    };
   };
 
   const handleFile = async (file: File) => {
@@ -107,7 +113,7 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
             return;
           }
 
-          const processedData = processExcelData(jsonData);
+          const { data: processedData, skippedRows } = processExcelData(jsonData);
           
           if (processedData.length === 0) {
             toast.error('Keine gültigen Daten gefunden. Bitte überprüfen Sie das Dateiformat.');
@@ -115,7 +121,12 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
           }
 
           onDataLoaded(processedData);
-          toast.success(`${processedData.length} Tools erfolgreich geladen`);
+          
+          if (skippedRows > 0) {
+            toast.warning(`${processedData.length} Tools geladen, ${skippedRows} fehlerhafte Zeilen übersprungen`);
+          } else {
+            toast.success(`${processedData.length} Tools erfolgreich geladen`);
+          }
           
         } catch (error) {
           console.error('Error processing file data:', error);
