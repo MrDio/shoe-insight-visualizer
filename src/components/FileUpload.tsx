@@ -82,36 +82,55 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
 
   const handleFile = async (file: File) => {
     try {
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data);
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
+      const reader = new FileReader();
       
-      if (jsonData.length === 0) {
-        // Selbst wenn keine Daten gefunden wurden, erstellen wir einen Beispieldatensatz
-        const dummyData: ShoeData[] = [{
-          id: 'example-1',
-          name: 'Beispielprodukt',
-          category: 'Allgemein',
-          size: 'Universal',
-          price: 0,
-          availability: 1,
-          country_code: 'DE',
-          currency: 'EUR',
-          date: new Date().toISOString().split('T')[0],
-        }];
-        onDataLoaded(dummyData);
-        toast.warning('Keine Daten in der Excel-Datei gefunden. Ein Beispieldatensatz wurde geladen.');
-        return;
-      }
+      reader.onload = (e) => {
+        try {
+          const data = e.target?.result;
+          if (!data) {
+            throw new Error('Keine Daten gefunden');
+          }
+          
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
+          
+          if (jsonData.length === 0) {
+            // Selbst wenn keine Daten gefunden wurden, erstellen wir einen Beispieldatensatz
+            const dummyData: ShoeData[] = [{
+              id: 'example-1',
+              name: 'Beispielprodukt',
+              category: 'Allgemein',
+              size: 'Universal',
+              price: 0,
+              availability: 1,
+              country_code: 'DE',
+              currency: 'EUR',
+              date: new Date().toISOString().split('T')[0],
+            }];
+            onDataLoaded(dummyData);
+            toast.warning('Keine Daten in der Excel-Datei gefunden. Ein Beispieldatensatz wurde geladen.');
+            return;
+          }
 
-      // Verarbeite alle Reihen und setze Standardwerte für fehlende Daten
-      const processedData = jsonData.map((row, index) => processRow(row, index));
+          // Verarbeite alle Reihen und setze Standardwerte für fehlende Daten
+          const processedData = jsonData.map((row, index) => processRow(row, index));
 
-      onDataLoaded(processedData);
-      toast.success(`${processedData.length} Datenreihen erfolgreich geladen`);
+          onDataLoaded(processedData);
+          toast.success(`${processedData.length} Datenreihen erfolgreich geladen`);
+        } catch (error) {
+          console.error('Error processing file data:', error);
+          toast.error('Fehler beim Verarbeiten der Datei');
+        }
+      };
+
+      reader.onerror = () => {
+        toast.error('Fehler beim Lesen der Datei');
+      };
+
+      reader.readAsBinaryString(file);
     } catch (error) {
-      console.error('Error processing file:', error);
+      console.error('Error handling file:', error);
       toast.error('Fehler beim Verarbeiten der Datei');
     }
   };
