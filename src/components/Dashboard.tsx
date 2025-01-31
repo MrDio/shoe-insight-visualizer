@@ -1,6 +1,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ResponsiveSankey } from '@nivo/sankey';
 import { ResponsiveChord } from '@nivo/chord';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type ShoeData = {
   id: string;
@@ -99,71 +100,79 @@ export const Dashboard = ({ data }: DashboardProps) => {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4">Durchschnittspreis nach Kategorie</h3>
-        <div className="h-[400px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="category" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="avgPrice" fill="#1e40af" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
       {data.length > 0 && (
-        <>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Kategorie-Größen Beziehungen</h3>
-            <div className="h-[500px]">
-              <ResponsiveSankey
-                data={sankeyData}
-                margin={{ top: 40, right: 160, bottom: 40, left: 50 }}
-                align="justify"
-                colors={{ scheme: 'category10' }}
-                nodeOpacity={1}
-                nodeThickness={18}
-                nodeInnerPadding={3}
-                nodeSpacing={24}
-                nodeBorderWidth={0}
-                linkOpacity={0.5}
-                linkHoverOthersOpacity={0.1}
-                enableLinkGradient={true}
-              />
-            </div>
-          </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <Tabs defaultValue="bar" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="bar">Bar-Chart</TabsTrigger>
+              <TabsTrigger value="sankey">Sankey</TabsTrigger>
+              <TabsTrigger value="chord">Chord</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="bar" className="mt-6">
+              <h3 className="text-lg font-semibold mb-4">Durchschnittspreis nach Kategorie</h3>
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="category" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="avgPrice" fill="#1e40af" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </TabsContent>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Preisbeziehungen zwischen Kategorien</h3>
-            <div className="h-[500px]">
-              <ResponsiveChord
-                data={chordData}
-                keys={categories}
-                margin={{ top: 60, right: 60, bottom: 60, left: 60 }}
-                padAngle={0.02}
-                innerRadiusRatio={0.96}
-                innerRadiusOffset={0.02}
-                arcOpacity={1}
-                arcBorderWidth={1}
-                arcBorderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
-                ribbonOpacity={0.5}
-                ribbonBorderWidth={1}
-                ribbonBorderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
-                enableLabel={true}
-                label="id"
-                labelOffset={12}
-                labelRotation={-90}
-                labelTextColor={{ from: 'color', modifiers: [['darker', 1]] }}
-                colors={{ scheme: 'nivo' }}
-                isInteractive={true}
-                motionConfig="gentle"
-              />
-            </div>
-          </div>
-        </>
+            <TabsContent value="sankey" className="mt-6">
+              <h3 className="text-lg font-semibold mb-4">Kategorie-Größen Beziehungen</h3>
+              <div className="h-[500px]">
+                <ResponsiveSankey
+                  data={sankeyData}
+                  margin={{ top: 40, right: 160, bottom: 40, left: 50 }}
+                  align="justify"
+                  colors={{ scheme: 'category10' }}
+                  nodeOpacity={1}
+                  nodeThickness={18}
+                  nodeInnerPadding={3}
+                  nodeSpacing={24}
+                  nodeBorderWidth={0}
+                  linkOpacity={0.5}
+                  linkHoverOthersOpacity={0.1}
+                  enableLinkGradient={true}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="chord" className="mt-6">
+              <h3 className="text-lg font-semibold mb-4">Preisbeziehungen zwischen Kategorien</h3>
+              <div className="h-[500px]">
+                <ResponsiveChord
+                  data={chordData}
+                  keys={categories}
+                  margin={{ top: 60, right: 60, bottom: 60, left: 60 }}
+                  padAngle={0.02}
+                  innerRadiusRatio={0.96}
+                  innerRadiusOffset={0.02}
+                  arcOpacity={1}
+                  arcBorderWidth={1}
+                  arcBorderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
+                  ribbonOpacity={0.5}
+                  ribbonBorderWidth={1}
+                  ribbonBorderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
+                  enableLabel={true}
+                  label="id"
+                  labelOffset={12}
+                  labelRotation={-90}
+                  labelTextColor={{ from: 'color', modifiers: [['darker', 1]] }}
+                  colors={{ scheme: 'nivo' }}
+                  isInteractive={true}
+                  motionConfig="gentle"
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
       )}
     </div>
   );
