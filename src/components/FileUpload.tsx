@@ -46,32 +46,43 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
     }
   };
 
+  const isValidRow = (row: any): row is ShoeData => {
+    return (
+      row.id && 
+      row.name && 
+      row.category && 
+      row.size && 
+      typeof row.price === 'number' &&
+      (row.availability === 0 || row.availability === 1)
+    );
+  };
+
   const handleFile = async (file: File) => {
     try {
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet) as ShoeData[];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
       
       if (jsonData.length === 0) {
         toast.error('Die Excel-Datei enthält keine Daten');
         return;
       }
 
-      // Validate required fields
-      const isValidData = jsonData.every(item => 
-        item.id && item.name && item.category && 
-        item.size && typeof item.price === 'number' &&
-        typeof item.availability === 'number'
-      );
+      // Filter valid rows
+      const validData = jsonData.filter(isValidRow);
 
-      if (!isValidData) {
-        toast.error('Die Excel-Datei enthält ungültige oder fehlende Daten');
+      if (validData.length === 0) {
+        toast.error('Keine gültigen Daten in der Excel-Datei gefunden');
         return;
       }
 
-      onDataLoaded(jsonData);
-      toast.success(`Datei "${file.name}" erfolgreich hochgeladen`);
+      if (validData.length < jsonData.length) {
+        toast.warning(`${jsonData.length - validData.length} ungültige Datenreihen wurden übersprungen`);
+      }
+
+      onDataLoaded(validData);
+      toast.success(`${validData.length} Datenreihen erfolgreich geladen`);
     } catch (error) {
       console.error('Error processing file:', error);
       toast.error('Fehler beim Verarbeiten der Datei');
