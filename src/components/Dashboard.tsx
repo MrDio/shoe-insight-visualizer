@@ -20,7 +20,16 @@ interface DashboardProps {
 }
 
 export const Dashboard = ({ data }: DashboardProps) => {
-  // Berechne Durchschnittspreise pro Kategorie
+  // Early return if no data is present
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[400px] bg-white rounded-lg shadow">
+        <p className="text-lg text-gray-500">Bitte laden Sie Daten hoch, um die Visualisierungen zu sehen.</p>
+      </div>
+    );
+  }
+
+  // Calculate averages only if we have data
   const averagePricesByCategory = data.reduce((acc, item) => {
     if (!acc[item.category]) {
       acc[item.category] = { total: 0, count: 0 };
@@ -35,18 +44,16 @@ export const Dashboard = ({ data }: DashboardProps) => {
     avgPrice: Math.round(values.total / values.count),
   }));
 
-  // Berechne Gesamtstatistiken
+  // Calculate total statistics
   const totalProducts = data.length;
   const availableProducts = data.filter(item => item.availability === 1).length;
-  const averagePrice = data.length > 0
-    ? Math.round(data.reduce((sum, item) => sum + item.price, 0) / data.length)
-    : 0;
+  const averagePrice = Math.round(data.reduce((sum, item) => sum + item.price, 0) / data.length);
 
-  // Prepare Sankey data with validation
+  // Prepare Sankey data
   const categories = [...new Set(data.map(d => d.category))];
   const sizes = [...new Set(data.map(d => d.size))];
   
-  const sankeyData = categories.length > 0 && sizes.length > 0 ? {
+  const sankeyData = {
     nodes: [
       ...categories.map(id => ({ id })),
       ...sizes.map(id => ({ id }))
@@ -67,10 +74,10 @@ export const Dashboard = ({ data }: DashboardProps) => {
       }
       return acc;
     }, [] as { source: string; target: string; value: number }[])
-  } : { nodes: [], links: [] };
+  };
 
-  // Prepare Chord data with validation
-  const chordData = categories.length > 0 ? categories.map(cat1 => 
+  // Prepare Chord data
+  const chordData = categories.map(cat1 => 
     categories.map(cat2 => {
       if (cat1 === cat2) return 0;
       const price1 = data
@@ -81,7 +88,7 @@ export const Dashboard = ({ data }: DashboardProps) => {
         .reduce((sum, d) => sum + d.price, 0);
       return Math.round((price1 + price2) / 2);
     })
-  ) : [[0]];
+  );
 
   return (
     <div className="space-y-8">
@@ -100,80 +107,76 @@ export const Dashboard = ({ data }: DashboardProps) => {
         </div>
       </div>
 
-      {data.length > 0 && (
-        <div className="bg-white p-6 rounded-lg shadow">
-          <Tabs defaultValue="bar" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="bar">Bar-Chart</TabsTrigger>
-              <TabsTrigger value="sankey">Sankey</TabsTrigger>
-              <TabsTrigger value="chord">Chord</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="bar" className="mt-6">
-              <h3 className="text-lg font-semibold mb-4">Durchschnittspreis nach Kategorie</h3>
-              <div className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="category" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="avgPrice" fill="#1e40af" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </TabsContent>
+      <div className="bg-white p-6 rounded-lg shadow">
+        <Tabs defaultValue="bar" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="bar">Bar-Chart</TabsTrigger>
+            <TabsTrigger value="sankey">Sankey</TabsTrigger>
+            <TabsTrigger value="chord">Chord</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="bar" className="mt-6">
+            <h3 className="text-lg font-semibold mb-4">Durchschnittspreis nach Kategorie</h3>
+            <div className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="category" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="avgPrice" fill="#1e40af" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </TabsContent>
 
-            <TabsContent value="sankey" className="mt-6">
-              <h3 className="text-lg font-semibold mb-4">Kategorie-Größen Beziehungen</h3>
-              <div className="h-[500px]">
-                <ResponsiveSankey
-                  data={sankeyData}
-                  margin={{ top: 40, right: 160, bottom: 40, left: 50 }}
-                  align="justify"
-                  colors={{ scheme: 'category10' }}
-                  nodeOpacity={1}
-                  nodeThickness={18}
-                  nodeInnerPadding={3}
-                  nodeSpacing={24}
-                  nodeBorderWidth={0}
-                  linkOpacity={0.5}
-                  linkHoverOthersOpacity={0.1}
-                  enableLinkGradient={true}
-                />
-              </div>
-            </TabsContent>
+          <TabsContent value="sankey" className="mt-6">
+            <h3 className="text-lg font-semibold mb-4">Kategorie-Größen Beziehungen</h3>
+            <div className="h-[500px]">
+              <ResponsiveSankey
+                data={sankeyData}
+                margin={{ top: 40, right: 160, bottom: 40, left: 50 }}
+                align="justify"
+                colors={{ scheme: 'category10' }}
+                nodeOpacity={1}
+                nodeThickness={18}
+                nodeInnerPadding={3}
+                nodeSpacing={24}
+                nodeBorderWidth={0}
+                linkOpacity={0.5}
+                enableLinkGradient={true}
+              />
+            </div>
+          </TabsContent>
 
-            <TabsContent value="chord" className="mt-6">
-              <h3 className="text-lg font-semibold mb-4">Preisbeziehungen zwischen Kategorien</h3>
-              <div className="h-[500px]">
-                <ResponsiveChord
-                  data={chordData}
-                  keys={categories}
-                  margin={{ top: 60, right: 60, bottom: 60, left: 60 }}
-                  padAngle={0.02}
-                  innerRadiusRatio={0.96}
-                  innerRadiusOffset={0.02}
-                  arcOpacity={1}
-                  arcBorderWidth={1}
-                  arcBorderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
-                  ribbonOpacity={0.5}
-                  ribbonBorderWidth={1}
-                  ribbonBorderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
-                  enableLabel={true}
-                  label="id"
-                  labelOffset={12}
-                  labelRotation={-90}
-                  labelTextColor={{ from: 'color', modifiers: [['darker', 1]] }}
-                  colors={{ scheme: 'nivo' }}
-                  isInteractive={true}
-                  motionConfig="gentle"
-                />
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      )}
+          <TabsContent value="chord" className="mt-6">
+            <h3 className="text-lg font-semibold mb-4">Preisbeziehungen zwischen Kategorien</h3>
+            <div className="h-[500px]">
+              <ResponsiveChord
+                data={chordData}
+                keys={categories}
+                margin={{ top: 60, right: 60, bottom: 60, left: 60 }}
+                padAngle={0.02}
+                innerRadiusRatio={0.96}
+                innerRadiusOffset={0.02}
+                arcOpacity={1}
+                arcBorderWidth={1}
+                arcBorderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
+                ribbonOpacity={0.5}
+                ribbonBorderWidth={1}
+                ribbonBorderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
+                enableLabel={true}
+                label="id"
+                labelOffset={12}
+                labelRotation={-90}
+                labelTextColor={{ from: 'color', modifiers: [['darker', 1]] }}
+                colors={{ scheme: 'nivo' }}
+                motionConfig="gentle"
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
