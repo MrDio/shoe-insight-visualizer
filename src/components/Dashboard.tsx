@@ -159,10 +159,7 @@ export const Dashboard = ({ data }: DashboardProps) => {
                 labelTextColor={{ from: 'color', modifiers: [['darker', 1]] }}
                 colors={{ scheme: 'nivo' }}
                 isInteractive={true}
-                arcHoverOpacity={1}
-                arcHoverOthersOpacity={0.25}
-                ribbonHoverOpacity={0.75}
-                ribbonHoverOthersOpacity={0.25}
+                motionConfig="gentle"
               />
             </div>
           </div>
