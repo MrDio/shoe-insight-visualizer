@@ -19,18 +19,49 @@ interface DashboardProps {
   data: ShoeData[];
 }
 
-export const Dashboard = ({ data }: DashboardProps) => {
-  // Early return if no data is present
-  if (!data || data.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-[400px] bg-white rounded-lg shadow">
-        <p className="text-lg text-gray-500">Bitte laden Sie Daten hoch, um die Visualisierungen zu sehen.</p>
-      </div>
-    );
+// Mock data for initial display
+const mockData: ShoeData[] = [
+  {
+    id: "mock-1",
+    name: "Nike Air Max",
+    category: "Sneaker",
+    size: "42",
+    price: 129.99,
+    availability: 1,
+    country_code: "DE",
+    currency: "EUR",
+    date: new Date().toISOString().split('T')[0],
+  },
+  {
+    id: "mock-2",
+    name: "Adidas Superstar",
+    category: "Lifestyle",
+    size: "41",
+    price: 99.99,
+    availability: 1,
+    country_code: "DE",
+    currency: "EUR",
+    date: new Date().toISOString().split('T')[0],
+  },
+  {
+    id: "mock-3",
+    name: "Puma RS-X",
+    category: "Sport",
+    size: "43",
+    price: 89.99,
+    availability: 1,
+    country_code: "DE",
+    currency: "EUR",
+    date: new Date().toISOString().split('T')[0],
   }
+];
 
-  // Calculate averages only if we have data
-  const averagePricesByCategory = data.reduce((acc, item) => {
+export const Dashboard = ({ data }: DashboardProps) => {
+  // Use mock data if no real data is present
+  const displayData = data.length > 0 ? data : mockData;
+
+  // Calculate averages for the current display data
+  const averagePricesByCategory = displayData.reduce((acc, item) => {
     if (!acc[item.category]) {
       acc[item.category] = { total: 0, count: 0 };
     }
@@ -45,20 +76,20 @@ export const Dashboard = ({ data }: DashboardProps) => {
   }));
 
   // Calculate total statistics
-  const totalProducts = data.length;
-  const availableProducts = data.filter(item => item.availability === 1).length;
-  const averagePrice = Math.round(data.reduce((sum, item) => sum + item.price, 0) / data.length);
+  const totalProducts = displayData.length;
+  const availableProducts = displayData.filter(item => item.availability === 1).length;
+  const averagePrice = Math.round(displayData.reduce((sum, item) => sum + item.price, 0) / displayData.length);
 
   // Prepare Sankey data
-  const categories = [...new Set(data.map(d => d.category))];
-  const sizes = [...new Set(data.map(d => d.size))];
+  const categories = [...new Set(displayData.map(d => d.category))];
+  const sizes = [...new Set(displayData.map(d => d.size))];
   
   const sankeyData = {
     nodes: [
       ...categories.map(id => ({ id })),
       ...sizes.map(id => ({ id }))
     ],
-    links: data.reduce((acc, item) => {
+    links: displayData.reduce((acc, item) => {
       const existingLink = acc.find(l => 
         l.source === item.category && l.target === item.size
       );
@@ -80,10 +111,10 @@ export const Dashboard = ({ data }: DashboardProps) => {
   const chordData = categories.map(cat1 => 
     categories.map(cat2 => {
       if (cat1 === cat2) return 0;
-      const price1 = data
+      const price1 = displayData
         .filter(d => d.category === cat1)
         .reduce((sum, d) => sum + d.price, 0);
-      const price2 = data
+      const price2 = displayData
         .filter(d => d.category === cat2)
         .reduce((sum, d) => sum + d.price, 0);
       return Math.round((price1 + price2) / 2);
