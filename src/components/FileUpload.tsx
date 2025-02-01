@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
-import { ToolData, Category, Year, Month } from '../types/data';
+import { ToolData, Category } from '../types/data';
 import { Progress } from "@/components/ui/progress";
 
 interface FileUploadProps {
@@ -64,23 +64,27 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
           id: `tool-${index}`,
           tool,
           category: category as Category,
-          prices: {} as Record<Year, Record<Month, number>>
+          prices: {
+            '2023': {},
+            '2024': {},
+            '2025': {}
+          }
         };
 
-        ['2023', '2024', '2025'].forEach((year) => {
-          if (!toolData.prices[year]) {
-            toolData.prices[year] = {};
-          }
-
-          Array.from({ length: 12 }, (_, i) => {
-            const month = `${i + 1}`.padStart(2, '0') as Month;
-            const columnName = `${year}_${month}`;
-            const price = parseFloat(row[columnName]);
+        // Process price columns in format YYYY-MM
+        Object.entries(row).forEach(([key, value]) => {
+          const match = key.match(/^(\d{4})-(\d{2})$/);
+          if (match) {
+            const [, year, month] = match;
+            if (!toolData.prices[year]) {
+              toolData.prices[year] = {};
+            }
             
+            const price = parseFloat(value as string);
             if (!isNaN(price)) {
               toolData.prices[year][month] = price;
             }
-          });
+          }
         });
 
         toolsMap.set(tool, toolData);
