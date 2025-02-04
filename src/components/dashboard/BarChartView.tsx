@@ -8,25 +8,92 @@ interface BarChartViewProps {
   data: ToolData[];
 }
 
+// Beispieldaten für die Visualisierung
+const sampleData: ToolData[] = [
+  {
+    id: "tool-1",
+    tool: "GitHub Enterprise",
+    category: "IWC",
+    prices: {
+      "2023": {
+        "01": 150,
+        "02": 155,
+        "03": 160,
+        "04": 158,
+        "05": 165,
+        "06": 170,
+        "07": 175,
+        "08": 180,
+        "09": 185,
+        "10": 190,
+        "11": 195,
+        "12": 200
+      },
+      "2024": {
+        "01": 205,
+        "02": 210,
+        "03": 215,
+        "04": 220,
+        "05": 225,
+        "06": 230
+      }
+    }
+  },
+  {
+    id: "tool-2",
+    tool: "Jira Software",
+    category: "EWC",
+    prices: {
+      "2023": {
+        "01": 80,
+        "02": 82,
+        "03": 85,
+        "04": 87,
+        "05": 90,
+        "06": 92,
+        "07": 95,
+        "08": 97,
+        "09": 100,
+        "10": 102,
+        "11": 105,
+        "12": 108
+      },
+      "2024": {
+        "01": 110,
+        "02": 112,
+        "03": 115,
+        "04": 117,
+        "05": 120,
+        "06": 122
+      }
+    }
+  }
+];
+
 export const BarChartView = ({ data }: BarChartViewProps) => {
   const [selectedYear, setSelectedYear] = useState('2023');
   const [selectedTool, setSelectedTool] = useState('');
 
-  const tools = useMemo(() => {
-    return Array.from(new Set(data.map(item => item.tool)));
+  // Kombiniere die übergebenen Daten mit den Beispieldaten
+  const combinedData = useMemo(() => {
+    return [...sampleData, ...data];
   }, [data]);
+
+  const tools = useMemo(() => {
+    return Array.from(new Set(combinedData.map(item => item.tool)));
+  }, [combinedData]);
 
   const chartData = useMemo(() => {
     if (!selectedTool) return [];
 
-    const toolData = data.find(item => item.tool === selectedTool);
+    const toolData = combinedData.find(item => item.tool === selectedTool);
     if (!toolData || !toolData.prices[selectedYear]) return [];
 
     return Object.entries(toolData.prices[selectedYear]).map(([month, price]) => ({
       month: new Date(2023, parseInt(month) - 1).toLocaleString('de-DE', { month: 'short' }),
       price: price
     }));
-  }, [data, selectedYear, selectedTool]);
+  }, [combinedData, selectedYear, selectedTool]);
 
   return (
     <div className="space-y-6">
