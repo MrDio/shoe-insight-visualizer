@@ -71,25 +71,43 @@ const sampleData: ToolData[] = [
 
 export const BarChartView = ({ data }: BarChartViewProps) => {
   const [selectedYear, setSelectedYear] = useState('2023');
+  const [selectedTool, setSelectedTool] = useState('');
 
   const combinedData = useMemo(() => {
     return [...sampleData, ...data];
   }, [data]);
 
+  const tools = useMemo(() => {
+    return Array.from(new Set(combinedData.map(item => item.tool)));
+  }, [combinedData]);
+
   const chartData = useMemo(() => {
     const monthlyData = Array.from({ length: 12 }, (_, i) => {
       const month = (i + 1).toString().padStart(2, '0');
-      const expenses = combinedData
-        .filter(item => item.category.endsWith('C')) // IWC oder EWC
-        .reduce((sum, item) => {
-          return sum + (item.prices[selectedYear]?.[month] || 0);
-        }, 0);
+      
+      let expenses = 0;
+      let revenue = 0;
 
-      const revenue = combinedData
-        .filter(item => item.category.endsWith('R')) // IWR oder EWR
-        .reduce((sum, item) => {
-          return sum + (item.prices[selectedYear]?.[month] || 0);
-        }, 0);
+      if (!selectedTool) {
+        // Wenn kein Tool ausgewählt ist, zeige die Summe aller Tools
+        expenses = combinedData
+          .filter(item => item.category.endsWith('C'))
+          .reduce((sum, item) => sum + (item.prices[selectedYear]?.[month] || 0), 0);
+
+        revenue = combinedData
+          .filter(item => item.category.endsWith('R'))
+          .reduce((sum, item) => sum + (item.prices[selectedYear]?.[month] || 0), 0);
+      } else {
+        // Wenn ein Tool ausgewählt ist, zeige nur die Daten dieses Tools
+        const toolData = combinedData.find(item => item.tool === selectedTool);
+        if (toolData) {
+          if (toolData.category.endsWith('C')) {
+            expenses = toolData.prices[selectedYear]?.[month] || 0;
+          } else if (toolData.category.endsWith('R')) {
+            revenue = toolData.prices[selectedYear]?.[month] || 0;
+          }
+        }
+      }
 
       return {
         month: new Date(2023, i).toLocaleString('de-DE', { month: 'short' }),
@@ -99,23 +117,41 @@ export const BarChartView = ({ data }: BarChartViewProps) => {
     });
 
     return monthlyData;
-  }, [combinedData, selectedYear]);
+  }, [combinedData, selectedYear, selectedTool]);
 
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-semibold">Ausgaben und Einnahmen nach Monat</h3>
       
-      <div className="w-[200px]">
-        <Select value={selectedYear} onValueChange={setSelectedYear}>
-          <SelectTrigger>
-            <SelectValue placeholder="Jahr auswählen" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="2023">2023</SelectItem>
-            <SelectItem value="2024">2024</SelectItem>
-            <SelectItem value="2025">2025</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex gap-4">
+        <div className="w-[200px]">
+          <Select value={selectedTool} onValueChange={setSelectedTool}>
+            <SelectTrigger>
+              <SelectValue placeholder="Tool auswählen" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Alle Tools</SelectItem>
+              {tools.map((tool) => (
+                <SelectItem key={tool} value={tool}>
+                  {tool}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="w-[200px]">
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger>
+              <SelectValue placeholder="Jahr auswählen" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2023">2023</SelectItem>
+              <SelectItem value="2024">2024</SelectItem>
+              <SelectItem value="2025">2025</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="h-[400px]">
