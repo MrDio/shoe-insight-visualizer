@@ -71,7 +71,7 @@ const sampleData: ToolData[] = [
 
 export const BarChartView = ({ data }: BarChartViewProps) => {
   const [selectedYear, setSelectedYear] = useState('2023');
-  const [selectedTool, setSelectedTool] = useState('');
+  const [selectedTool, setSelectedTool] = useState('all');
 
   const combinedData = useMemo(() => {
     return [...sampleData, ...data];
@@ -88,8 +88,8 @@ export const BarChartView = ({ data }: BarChartViewProps) => {
       let expenses = 0;
       let revenue = 0;
 
-      if (!selectedTool) {
-        // Wenn kein Tool ausgewählt ist, zeige die Summe aller Tools
+      if (selectedTool === 'all') {
+        // Wenn "Alle Tools" ausgewählt ist, zeige die Summe aller Tools
         expenses = combinedData
           .filter(item => item.category.endsWith('C'))
           .reduce((sum, item) => sum + (item.prices[selectedYear]?.[month] || 0), 0);
@@ -130,7 +130,7 @@ export const BarChartView = ({ data }: BarChartViewProps) => {
               <SelectValue placeholder="Tool auswählen" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Alle Tools</SelectItem>
+              <SelectItem value="all">Alle Tools</SelectItem>
               {tools.map((tool) => (
                 <SelectItem key={tool} value={tool}>
                   {tool}
@@ -170,3 +170,4 @@ export const BarChartView = ({ data }: BarChartViewProps) => {
     </div>
   );
 };
+
