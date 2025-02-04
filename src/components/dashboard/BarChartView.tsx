@@ -15,26 +15,11 @@ const sampleData: ToolData[] = [
     category: "IWC",
     prices: {
       "2023": {
-        "01": 150,
-        "02": 155,
-        "03": 160,
-        "04": 158,
-        "05": 165,
-        "06": 170,
-        "07": 175,
-        "08": 180,
-        "09": 185,
-        "10": 190,
-        "11": 195,
-        "12": 200
+        "01": 150, "02": 155, "03": 160, "04": 158, "05": 165, "06": 170,
+        "07": 175, "08": 180, "09": 185, "10": 190, "11": 195, "12": 200
       },
       "2024": {
-        "01": 205,
-        "02": 210,
-        "03": 215,
-        "04": 220,
-        "05": 225,
-        "06": 230
+        "01": 205, "02": 210, "03": 215, "04": 220, "05": 225, "06": 230
       }
     }
   },
@@ -44,26 +29,11 @@ const sampleData: ToolData[] = [
     category: "EWC",
     prices: {
       "2023": {
-        "01": 80,
-        "02": 82,
-        "03": 85,
-        "04": 87,
-        "05": 90,
-        "06": 92,
-        "07": 95,
-        "08": 97,
-        "09": 100,
-        "10": 102,
-        "11": 105,
-        "12": 108
+        "01": 80, "02": 82, "03": 85, "04": 87, "05": 90, "06": 92,
+        "07": 95, "08": 97, "09": 100, "10": 102, "11": 105, "12": 108
       },
       "2024": {
-        "01": 110,
-        "02": 112,
-        "03": 115,
-        "04": 117,
-        "05": 120,
-        "06": 122
+        "01": 110, "02": 112, "03": 115, "04": 117, "05": 120, "06": 122
       }
     }
   },
@@ -73,26 +43,11 @@ const sampleData: ToolData[] = [
     category: "IWR",
     prices: {
       "2023": {
-        "01": 180,
-        "02": 185,
-        "03": 190,
-        "04": 188,
-        "05": 195,
-        "06": 200,
-        "07": 205,
-        "08": 210,
-        "09": 215,
-        "10": 220,
-        "11": 225,
-        "12": 230
+        "01": 180, "02": 185, "03": 190, "04": 188, "05": 195, "06": 200,
+        "07": 205, "08": 210, "09": 215, "10": 220, "11": 225, "12": 230
       },
       "2024": {
-        "01": 235,
-        "02": 240,
-        "03": 245,
-        "04": 250,
-        "05": 255,
-        "06": 260
+        "01": 235, "02": 240, "03": 245, "04": 250, "05": 255, "06": 260
       }
     }
   },
@@ -102,26 +57,11 @@ const sampleData: ToolData[] = [
     category: "EWR",
     prices: {
       "2023": {
-        "01": 100,
-        "02": 102,
-        "03": 105,
-        "04": 107,
-        "05": 110,
-        "06": 112,
-        "07": 115,
-        "08": 117,
-        "09": 120,
-        "10": 122,
-        "11": 125,
-        "12": 128
+        "01": 100, "02": 102, "03": 105, "04": 107, "05": 110, "06": 112,
+        "07": 115, "08": 117, "09": 120, "10": 122, "11": 125, "12": 128
       },
       "2024": {
-        "01": 130,
-        "02": 132,
-        "03": 135,
-        "04": 137,
-        "05": 140,
-        "06": 142
+        "01": 130, "02": 132, "03": 135, "04": 137, "05": 140, "06": 142
       }
     }
   }
@@ -129,103 +69,109 @@ const sampleData: ToolData[] = [
 
 export const BarChartView = ({ data }: BarChartViewProps) => {
   const [selectedYear, setSelectedYear] = useState('2023');
-  const [selectedTool, setSelectedTool] = useState('all');
 
   const combinedData = useMemo(() => {
     return [...sampleData, ...data];
   }, [data]);
 
-  const tools = useMemo(() => {
-    return Array.from(new Set(combinedData.map(item => item.tool)));
-  }, [combinedData]);
-
-  const chartData = useMemo(() => {
-    const monthlyData = Array.from({ length: 12 }, (_, i) => {
-      const month = (i + 1).toString().padStart(2, '0');
-      
-      let expenses = 0;
-      let revenue = 0;
-
-      if (selectedTool === 'all') {
-        // Wenn "Alle Tools" ausgewählt ist, zeige die Summe aller Tools
-        expenses = combinedData
-          .filter(item => item.category.endsWith('C'))
-          .reduce((sum, item) => sum + (item.prices[selectedYear]?.[month] || 0), 0);
-
-        revenue = combinedData
-          .filter(item => item.category.endsWith('R'))
-          .reduce((sum, item) => sum + (item.prices[selectedYear]?.[month] || 0), 0);
-      } else {
-        // Wenn ein Tool ausgewählt ist, zeige nur die Daten dieses Tools
-        const toolData = combinedData.find(item => item.tool === selectedTool);
-        if (toolData) {
-          if (toolData.category.endsWith('C')) {
-            expenses = toolData.prices[selectedYear]?.[month] || 0;
-          } else if (toolData.category.endsWith('R')) {
-            revenue = toolData.prices[selectedYear]?.[month] || 0;
-          }
-        }
+  const processedData = useMemo(() => {
+    // Gruppiere Tools nach Namen (ohne "Revenue")
+    const toolGroups = combinedData.reduce((acc, item) => {
+      const baseName = item.tool.replace(' Revenue', '');
+      if (!acc[baseName]) {
+        acc[baseName] = [];
       }
+      acc[baseName].push(item);
+      return acc;
+    }, {} as Record<string, ToolData[]>);
+
+    // Erstelle für jedes Tool und für "Developer Platforms" die Monatsdaten
+    const results = Object.entries(toolGroups).map(([toolName, toolItems]) => {
+      const monthlyData = Array.from({ length: 12 }, (_, i) => {
+        const month = (i + 1).toString().padStart(2, '0');
+        
+        const costs = toolItems.find(item => item.category.endsWith('C'))?.prices[selectedYear]?.[month] || 0;
+        const revenue = toolItems.find(item => item.category.endsWith('R'))?.prices[selectedYear]?.[month] || 0;
+
+        return {
+          month: new Date(2023, i).toLocaleString('de-DE', { month: 'short' }),
+          expenses: costs,
+          revenue: revenue,
+          toolName
+        };
+      });
 
       return {
-        month: new Date(2023, i).toLocaleString('de-DE', { month: 'short' }),
-        expenses,
-        revenue
+        toolName,
+        data: monthlyData
       };
     });
 
-    return monthlyData;
-  }, [combinedData, selectedYear, selectedTool]);
+    // Berechne "Developer Platforms" als Aggregation
+    const developerPlatformsData = Array.from({ length: 12 }, (_, i) => {
+      const month = (i + 1).toString().padStart(2, '0');
+      
+      const totalExpenses = combinedData
+        .filter(item => item.category.endsWith('C'))
+        .reduce((sum, item) => sum + (item.prices[selectedYear]?.[month] || 0), 0);
+
+      const totalRevenue = combinedData
+        .filter(item => item.category.endsWith('R'))
+        .reduce((sum, item) => sum + (item.prices[selectedYear]?.[month] || 0), 0);
+
+      return {
+        month: new Date(2023, i).toLocaleString('de-DE', { month: 'short' }),
+        expenses: totalExpenses,
+        revenue: totalRevenue,
+        toolName: 'Developer Platforms'
+      };
+    });
+
+    results.push({
+      toolName: 'Developer Platforms',
+      data: developerPlatformsData
+    });
+
+    return results;
+  }, [combinedData, selectedYear]);
 
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-semibold">Ausgaben und Einnahmen nach Monat</h3>
       
-      <div className="flex gap-4">
-        <div className="w-[200px]">
-          <Select value={selectedTool} onValueChange={setSelectedTool}>
-            <SelectTrigger>
-              <SelectValue placeholder="Tool auswählen" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alle Tools</SelectItem>
-              {tools.map((tool) => (
-                <SelectItem key={tool} value={tool}>
-                  {tool}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="w-[200px]">
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger>
-              <SelectValue placeholder="Jahr auswählen" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2023">2023</SelectItem>
-              <SelectItem value="2024">2024</SelectItem>
-              <SelectItem value="2025">2025</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="w-[200px]">
+        <Select value={selectedYear} onValueChange={setSelectedYear}>
+          <SelectTrigger>
+            <SelectValue placeholder="Jahr auswählen" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="2023">2023</SelectItem>
+            <SelectItem value="2024">2024</SelectItem>
+            <SelectItem value="2025">2025</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="h-[400px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="expenses" name="Ausgaben" fill="#ef4444" />
-            <Bar dataKey="revenue" name="Einnahmen" fill="#22c55e" />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {processedData.map(({ toolName, data }) => (
+          <div key={toolName} className="bg-white p-4 rounded-lg shadow">
+            <h4 className="text-md font-medium mb-4">{toolName}</h4>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="expenses" name="Ausgaben" fill="#ef4444" />
+                  <Bar dataKey="revenue" name="Einnahmen" fill="#22c55e" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 };
-
