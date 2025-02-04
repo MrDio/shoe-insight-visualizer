@@ -1,5 +1,5 @@
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToolData } from '@/types/data';
 import { useState, useMemo } from 'react';
@@ -8,7 +8,6 @@ interface BarChartViewProps {
   data: ToolData[];
 }
 
-// Beispieldaten für die Visualisierung
 const sampleData: ToolData[] = [
   {
     id: "tool-1",
@@ -72,61 +71,51 @@ const sampleData: ToolData[] = [
 
 export const BarChartView = ({ data }: BarChartViewProps) => {
   const [selectedYear, setSelectedYear] = useState('2023');
-  const [selectedTool, setSelectedTool] = useState('');
 
-  // Kombiniere die übergebenen Daten mit den Beispieldaten
   const combinedData = useMemo(() => {
     return [...sampleData, ...data];
   }, [data]);
 
-  const tools = useMemo(() => {
-    return Array.from(new Set(combinedData.map(item => item.tool)));
-  }, [combinedData]);
-
   const chartData = useMemo(() => {
-    if (!selectedTool) return [];
+    const monthlyData = Array.from({ length: 12 }, (_, i) => {
+      const month = (i + 1).toString().padStart(2, '0');
+      const expenses = combinedData
+        .filter(item => item.category.endsWith('C')) // IWC oder EWC
+        .reduce((sum, item) => {
+          return sum + (item.prices[selectedYear]?.[month] || 0);
+        }, 0);
 
-    const toolData = combinedData.find(item => item.tool === selectedTool);
-    if (!toolData || !toolData.prices[selectedYear]) return [];
+      const revenue = combinedData
+        .filter(item => item.category.endsWith('R')) // IWR oder EWR
+        .reduce((sum, item) => {
+          return sum + (item.prices[selectedYear]?.[month] || 0);
+        }, 0);
 
-    return Object.entries(toolData.prices[selectedYear]).map(([month, price]) => ({
-      month: new Date(2023, parseInt(month) - 1).toLocaleString('de-DE', { month: 'short' }),
-      price: price
-    }));
-  }, [combinedData, selectedYear, selectedTool]);
+      return {
+        month: new Date(2023, i).toLocaleString('de-DE', { month: 'short' }),
+        expenses,
+        revenue
+      };
+    });
+
+    return monthlyData;
+  }, [combinedData, selectedYear]);
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold">Preisentwicklung nach Monat</h3>
+      <h3 className="text-lg font-semibold">Ausgaben und Einnahmen nach Monat</h3>
       
-      <div className="flex gap-4">
-        <div className="w-[200px]">
-          <Select value={selectedTool} onValueChange={setSelectedTool}>
-            <SelectTrigger>
-              <SelectValue placeholder="Tool auswählen" />
-            </SelectTrigger>
-            <SelectContent>
-              {tools.map((tool) => (
-                <SelectItem key={tool} value={tool}>
-                  {tool}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="w-[200px]">
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger>
-              <SelectValue placeholder="Jahr auswählen" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2023">2023</SelectItem>
-              <SelectItem value="2024">2024</SelectItem>
-              <SelectItem value="2025">2025</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="w-[200px]">
+        <Select value={selectedYear} onValueChange={setSelectedYear}>
+          <SelectTrigger>
+            <SelectValue placeholder="Jahr auswählen" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="2023">2023</SelectItem>
+            <SelectItem value="2024">2024</SelectItem>
+            <SelectItem value="2025">2025</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="h-[400px]">
@@ -136,7 +125,9 @@ export const BarChartView = ({ data }: BarChartViewProps) => {
             <XAxis dataKey="month" />
             <YAxis />
             <Tooltip />
-            <Bar dataKey="price" fill="#0ea5e9" />
+            <Legend />
+            <Bar dataKey="expenses" name="Ausgaben" fill="#ef4444" />
+            <Bar dataKey="revenue" name="Einnahmen" fill="#22c55e" />
           </BarChart>
         </ResponsiveContainer>
       </div>
