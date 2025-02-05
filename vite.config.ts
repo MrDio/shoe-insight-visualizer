@@ -30,6 +30,7 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
+    base: '/', // Explicitly set the base URL
     server: {
       host: "0.0.0.0",
       port: 8080,
