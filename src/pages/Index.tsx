@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileUpload } from '@/components/FileUpload';
 import { DataTable } from '@/components/DataTable';
 import { Dashboard } from '@/components/Dashboard';
@@ -7,10 +7,40 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Database, File } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { ApplicationData } from '../types/data';
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [data, setData] = useState<ApplicationData[]>([]);
   const [dataSource, setDataSource] = useState<'database' | 'file'>('database');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (dataSource === 'database') {
+        const { data: applications, error } = await supabase
+          .from('applications')
+          .select('*');
+
+        if (error) {
+          console.error('Error fetching data:', error);
+          return;
+        }
+
+        if (applications) {
+          const transformedData: ApplicationData[] = applications.map(app => ({
+            type: app.type as 'Application',
+            name: app.name,
+            appId: app.app_id,
+            cloudProvider: app.cloud_provider as 'azure' | 'onPremisesCloud',
+            cloudType: app.cloud_type as ('paas' | 'caas')[],
+            dyp: app.dyp as 'Yes' | 'No'
+          }));
+          setData(transformedData);
+        }
+      }
+    };
+
+    fetchData();
+  }, [dataSource]);
 
   const handleDataLoaded = (newData: ApplicationData[]) => {
     setData(newData);
