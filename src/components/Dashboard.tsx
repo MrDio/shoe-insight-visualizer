@@ -16,7 +16,7 @@ export const Dashboard = ({ data }: DashboardProps) => {
   const uniqueCloudProviders = new Set(data.map(item => item.cloudProvider)).size;
   const uniqueCloudTypes = new Set(data.flatMap(item => item.cloudType)).size;
 
-  // Prepare Sankey data
+  // Prepare Sankey data with validation
   const cloudProviders = [...new Set(data.map(d => d.cloudProvider))];
   const cloudTypes = [...new Set(data.flatMap(d => d.cloudType))];
   
@@ -25,8 +25,13 @@ export const Dashboard = ({ data }: DashboardProps) => {
       ...cloudProviders.map(id => ({ id })),
       ...cloudTypes.map(id => ({ id }))
     ],
-    links: data.reduce((acc, item) => {
+    links: data.reduce<Array<{ source: string; target: string; value: number }>>((acc, item) => {
       item.cloudType.forEach(type => {
+        // Skip invalid connections
+        if (!cloudProviders.includes(item.cloudProvider) || !cloudTypes.includes(type)) {
+          return;
+        }
+
         const existingLink = acc.find(l => 
           l.source === item.cloudProvider && l.target === type
         );
@@ -42,8 +47,11 @@ export const Dashboard = ({ data }: DashboardProps) => {
         }
       });
       return acc;
-    }, [] as { source: string; target: string; value: number }[])
+    }, [])
   };
+
+  // Only render if we have valid data
+  const hasValidSankeyData = sankeyData.nodes.length > 0 && sankeyData.links.length > 0;
 
   return (
     <div className="space-y-8">
@@ -60,7 +68,13 @@ export const Dashboard = ({ data }: DashboardProps) => {
           </TabsList>
           
           <TabsContent value="sankey" className="mt-6">
-            <SankeyView data={sankeyData} />
+            {hasValidSankeyData ? (
+              <SankeyView data={sankeyData} />
+            ) : (
+              <div className="h-[500px] flex items-center justify-center">
+                <p className="text-gray-500">Keine Daten für das Sankey-Diagramm verfügbar</p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
