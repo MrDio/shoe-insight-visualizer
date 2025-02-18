@@ -39,6 +39,42 @@ export type Database = {
         }
         Relationships: []
       }
+      applications: {
+        Row: {
+          app_id: string
+          cloud_provider: string
+          cloud_type: string[]
+          created_at: string
+          dyp: string
+          id: string
+          name: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          app_id: string
+          cloud_provider: string
+          cloud_type: string[]
+          created_at?: string
+          dyp?: string
+          id?: string
+          name: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          app_id?: string
+          cloud_provider?: string
+          cloud_type?: string[]
+          created_at?: string
+          dyp?: string
+          id?: string
+          name?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dataflows: {
         Row: {
           created_at: string

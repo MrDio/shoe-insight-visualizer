@@ -11,46 +11,50 @@ import {
 import { Input } from "@/components/ui/input";
 import { Search } from 'lucide-react';
 import { ApplicationData } from '../types/data';
-
-// Sample data
-const sampleData: ApplicationData[] = [
-  {
-    type: 'Application',
-    name: 'ASDASDASDAS',
-    appId: 'APP-29262',
-    cloudProvider: 'azure',
-    cloudType: ['paas', 'caas'],
-    dyp: 'Yes'
-  },
-  {
-    type: 'Application',
-    name: 'ASDASDSAA',
-    appId: 'APP-23657',
-    cloudProvider: 'azure',
-    cloudType: ['caas'],
-    dyp: 'No'
-  },
-  {
-    type: 'Application',
-    name: 'ADSADADA',
-    appId: 'APP-32031',
-    cloudProvider: 'onPremisesCloud',
-    cloudType: ['caas'],
-    dyp: 'Yes'
-  }
-];
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface DataTableProps {
   initialData?: ApplicationData[];
 }
 
-export const DataTable = ({ initialData = sampleData }: DataTableProps) => {
+export const DataTable = ({ initialData = [] }: DataTableProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [data, setData] = useState<ApplicationData[]>(initialData);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setData(initialData);
-  }, [initialData]);
+    const fetchData = async () => {
+      try {
+        const { data: applications, error } = await supabase
+          .from('applications')
+          .select('*');
+
+        if (error) {
+          throw error;
+        }
+
+        // Transform the data to match ApplicationData type
+        const transformedData: ApplicationData[] = applications.map(app => ({
+          type: app.type as 'Application',
+          name: app.name,
+          appId: app.app_id,
+          cloudProvider: app.cloud_provider as 'azure' | 'onPremisesCloud',
+          cloudType: app.cloud_type as ('paas' | 'caas')[],
+          dyp: app.dyp as 'Yes' | 'No'
+        }));
+
+        setData(transformedData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast.error('Fehler beim Laden der Daten');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const filteredData = data.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -82,16 +86,30 @@ export const DataTable = ({ initialData = sampleData }: DataTableProps) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredData.map((item) => (
-              <TableRow key={item.appId}>
-                <TableCell>{item.type}</TableCell>
-                <TableCell>{item.name}</TableCell>
-                <TableCell>{item.appId}</TableCell>
-                <TableCell>{item.cloudProvider}</TableCell>
-                <TableCell>{item.cloudType.join(';')}</TableCell>
-                <TableCell>{item.dyp}</TableCell>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-4">
+                  Lädt Daten...
+                </TableCell>
               </TableRow>
-            ))}
+            ) : filteredData.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-4">
+                  Keine Daten gefunden
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredData.map((item) => (
+                <TableRow key={item.appId}>
+                  <TableCell>{item.type}</TableCell>
+                  <TableCell>{item.name}</TableCell>
+                  <TableCell>{item.appId}</TableCell>
+                  <TableCell>{item.cloudProvider}</TableCell>
+                  <TableCell>{item.cloudType.join(';')}</TableCell>
+                  <TableCell>{item.dyp}</TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
