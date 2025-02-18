@@ -16,38 +16,42 @@ export const Dashboard = ({ data }: DashboardProps) => {
   const uniqueCloudProviders = new Set(data.map(item => item.cloudProvider)).size;
   const uniqueCloudTypes = new Set(data.flatMap(item => item.cloudType)).size;
 
-  // Prepare Sankey data with validation
-  const cloudProviders = [...new Set(data.map(d => d.cloudProvider))];
-  const cloudTypes = [...new Set(data.flatMap(d => d.cloudType))];
-  
+  // Prepare Sankey data for DyP distribution
+  const dypApps = data.filter(d => d.dyp === 'Yes').map(d => d.name);
+  const nonDypApps = data.filter(d => d.dyp === 'No').map(d => d.name);
+
   const sankeyData = {
     nodes: [
-      ...cloudProviders.map(id => ({ id })),
-      ...cloudTypes.map(id => ({ id }))
+      { id: "Applications" },
+      { id: "DyP" },
+      { id: "Non-DyP" },
+      ...dypApps.map(name => ({ id: name })),
+      ...nonDypApps.map(name => ({ id: name }))
     ],
-    links: data.reduce<Array<{ source: string; target: string; value: number }>>((acc, item) => {
-      item.cloudType.forEach(type => {
-        // Skip invalid connections
-        if (!cloudProviders.includes(item.cloudProvider) || !cloudTypes.includes(type)) {
-          return;
-        }
-
-        const existingLink = acc.find(l => 
-          l.source === item.cloudProvider && l.target === type
-        );
-        
-        if (existingLink) {
-          existingLink.value += 1;
-        } else {
-          acc.push({
-            source: item.cloudProvider,
-            target: type,
-            value: 1
-          });
-        }
-      });
-      return acc;
-    }, [])
+    links: [
+      // Link from Applications to DyP and Non-DyP
+      ...dypApps.map(name => ({
+        source: "Applications",
+        target: "DyP",
+        value: 1
+      })),
+      ...nonDypApps.map(name => ({
+        source: "Applications",
+        target: "Non-DyP",
+        value: 1
+      })),
+      // Links from DyP/Non-DyP to individual applications
+      ...dypApps.map(name => ({
+        source: "DyP",
+        target: name,
+        value: 1
+      })),
+      ...nonDypApps.map(name => ({
+        source: "Non-DyP",
+        target: name,
+        value: 1
+      }))
+    ]
   };
 
   // Only render if we have valid data
@@ -64,7 +68,7 @@ export const Dashboard = ({ data }: DashboardProps) => {
       <div className="bg-white p-6 rounded-lg shadow">
         <Tabs defaultValue="sankey" className="w-full">
           <TabsList className="grid w-full grid-cols-1">
-            <TabsTrigger value="sankey">Sankey</TabsTrigger>
+            <TabsTrigger value="sankey">DyP Verteilung</TabsTrigger>
           </TabsList>
           
           <TabsContent value="sankey" className="mt-6">
@@ -81,3 +85,4 @@ export const Dashboard = ({ data }: DashboardProps) => {
     </div>
   );
 };
+
