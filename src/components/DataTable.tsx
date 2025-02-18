@@ -35,13 +35,17 @@ export const DataTable = ({ initialData = [], useSupabase = false }: DataTablePr
 
     const fetchData = async () => {
       try {
+        console.log('Fetching data from Supabase...');
         const { data: applications, error } = await supabase
           .from('applications')
           .select('*');
 
         if (error) {
+          console.error('Supabase error:', error);
           throw error;
         }
+
+        console.log('Received data from Supabase:', applications);
 
         // Transform the data to match ApplicationData type
         const transformedData: ApplicationData[] = applications.map(app => ({
@@ -53,6 +57,7 @@ export const DataTable = ({ initialData = [], useSupabase = false }: DataTablePr
           dyp: app.dyp as 'Yes' | 'No'
         }));
 
+        console.log('Transformed data:', transformedData);
         setData(transformedData);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -69,6 +74,10 @@ export const DataTable = ({ initialData = [], useSupabase = false }: DataTablePr
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.appId.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  console.log('Current data source:', useSupabase ? 'Supabase' : 'File');
+  console.log('Current data:', data);
+  console.log('Filtered data:', filteredData);
 
   return (
     <div className="space-y-4">
