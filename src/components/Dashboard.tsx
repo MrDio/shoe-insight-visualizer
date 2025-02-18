@@ -16,81 +16,67 @@ export const Dashboard = ({ data }: DashboardProps) => {
   const uniqueCloudProviders = new Set(data.map(item => item.cloudProvider)).size;
   const uniqueCloudTypes = new Set(data.flatMap(item => item.cloudType)).size;
 
-  // Prepare Sankey data for DyP distribution
-  const dypApps = data.filter(d => d.dyp === 'Yes').map(d => d.name);
-  const nonDypApps = data.filter(d => d.dyp === 'No').map(d => d.name);
-
-  const sankeyDypData = {
+  // Prepare Sankey data with 4 levels
+  const sankeyData = {
     nodes: [
       { id: "Applications" },
       { id: "DyP" },
       { id: "Non-DyP" },
-      ...dypApps.map(name => ({ id: name })),
-      ...nonDypApps.map(name => ({ id: name }))
+      { id: "PaaS" },
+      { id: "CaaS" },
+      ...data.map(app => ({ id: app.name }))
     ],
     links: [
-      ...dypApps.map(name => ({
+      // Level 1 to 2: Applications to DyP/Non-DyP
+      ...data.filter(d => d.dyp === 'Yes').map(d => ({
         source: "Applications",
         target: "DyP",
         value: 1
       })),
-      ...nonDypApps.map(name => ({
+      ...data.filter(d => d.dyp === 'No').map(d => ({
         source: "Applications",
         target: "Non-DyP",
         value: 1
       })),
-      ...dypApps.map(name => ({
+
+      // Level 2 to 3: DyP/Non-DyP to PaaS/CaaS
+      ...data.filter(d => d.dyp === 'Yes' && d.cloudType.includes('paas')).map(d => ({
         source: "DyP",
-        target: name,
-        value: 1
-      })),
-      ...nonDypApps.map(name => ({
-        source: "Non-DyP",
-        target: name,
-        value: 1
-      }))
-    ]
-  };
-
-  // Prepare Sankey data for Cloud Type distribution
-  const paasApps = data.filter(d => d.cloudType.includes('paas')).map(d => d.name);
-  const caasApps = data.filter(d => d.cloudType.includes('caas')).map(d => d.name);
-
-  const sankeyCloudTypeData = {
-    nodes: [
-      { id: "Applications" },
-      { id: "PaaS" },
-      { id: "CaaS" },
-      ...paasApps.map(name => ({ id: name })),
-      ...caasApps.map(name => ({ id: name }))
-    ],
-    links: [
-      ...paasApps.map(name => ({
-        source: "Applications",
         target: "PaaS",
         value: 1
       })),
-      ...caasApps.map(name => ({
-        source: "Applications",
+      ...data.filter(d => d.dyp === 'Yes' && d.cloudType.includes('caas')).map(d => ({
+        source: "DyP",
         target: "CaaS",
         value: 1
       })),
-      ...paasApps.map(name => ({
-        source: "PaaS",
-        target: name,
+      ...data.filter(d => d.dyp === 'No' && d.cloudType.includes('paas')).map(d => ({
+        source: "Non-DyP",
+        target: "PaaS",
         value: 1
       })),
-      ...caasApps.map(name => ({
+      ...data.filter(d => d.dyp === 'No' && d.cloudType.includes('caas')).map(d => ({
+        source: "Non-DyP",
+        target: "CaaS",
+        value: 1
+      })),
+
+      // Level 3 to 4: PaaS/CaaS to Application Names
+      ...data.filter(d => d.cloudType.includes('paas')).map(d => ({
+        source: "PaaS",
+        target: d.name,
+        value: 1
+      })),
+      ...data.filter(d => d.cloudType.includes('caas')).map(d => ({
         source: "CaaS",
-        target: name,
+        target: d.name,
         value: 1
       }))
     ]
   };
 
   // Only render if we have valid data
-  const hasValidDypData = sankeyDypData.nodes.length > 0 && sankeyDypData.links.length > 0;
-  const hasValidCloudTypeData = sankeyCloudTypeData.nodes.length > 0 && sankeyCloudTypeData.links.length > 0;
+  const hasValidSankeyData = sankeyData.nodes.length > 0 && sankeyData.links.length > 0;
 
   return (
     <div className="space-y-8">
@@ -101,28 +87,17 @@ export const Dashboard = ({ data }: DashboardProps) => {
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow">
-        <Tabs defaultValue="dyp" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="dyp">DyP Verteilung</TabsTrigger>
-            <TabsTrigger value="cloudtype">Cloud Type Verteilung</TabsTrigger>
+        <Tabs defaultValue="sankey" className="w-full">
+          <TabsList className="grid w-full grid-cols-1">
+            <TabsTrigger value="sankey">Anwendungsverteilung</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="dyp" className="mt-6">
-            {hasValidDypData ? (
-              <SankeyView data={sankeyDypData} />
+          <TabsContent value="sankey" className="mt-6">
+            {hasValidSankeyData ? (
+              <SankeyView data={sankeyData} />
             ) : (
               <div className="h-[500px] flex items-center justify-center">
-                <p className="text-gray-500">Keine Daten für das DyP-Diagramm verfügbar</p>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="cloudtype" className="mt-6">
-            {hasValidCloudTypeData ? (
-              <SankeyView data={sankeyCloudTypeData} />
-            ) : (
-              <div className="h-[500px] flex items-center justify-center">
-                <p className="text-gray-500">Keine Daten für das Cloud-Type-Diagramm verfügbar</p>
+                <p className="text-gray-500">Keine Daten für das Sankey-Diagramm verfügbar</p>
               </div>
             )}
           </TabsContent>
