@@ -23,31 +23,39 @@ export const DataTable = ({ initialData = [], useSupabase = false }: DataTablePr
   const [searchTerm, setSearchTerm] = useState("");
   const [data, setData] = useState<ApplicationData[]>(initialData);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setIsLoading(true);
-    
-    if (!useSupabase) {
-      setData(initialData);
-      setIsLoading(false);
-      return;
-    }
-
     const fetchData = async () => {
+      if (!useSupabase) {
+        setData(initialData);
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        console.log('Fetching data from Supabase...');
-        const { data: applications, error } = await supabase
+        setIsLoading(true);
+        setError(null);
+        
+        const { data: applications, error: supabaseError } = await supabase
           .from('applications')
           .select('*');
 
-        if (error) {
-          console.error('Supabase error:', error);
-          throw error;
+        if (supabaseError) {
+          console.error('Supabase error:', supabaseError);
+          setError(supabaseError.message);
+          toast.error('Fehler beim Laden der Daten: ' + supabaseError.message);
+          return;
+        }
+
+        if (!applications) {
+          console.log('No data received from Supabase');
+          setData([]);
+          return;
         }
 
         console.log('Received data from Supabase:', applications);
 
-        // Transform the data to match ApplicationData type
         const transformedData: ApplicationData[] = applications.map(app => ({
           type: app.type as 'Application',
           name: app.name,
@@ -60,24 +68,22 @@ export const DataTable = ({ initialData = [], useSupabase = false }: DataTablePr
         console.log('Transformed data:', transformedData);
         setData(transformedData);
       } catch (error) {
-        console.error('Error fetching data:', error);
-        toast.error('Fehler beim Laden der Daten');
+        const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
+        console.error('Error fetching data:', errorMessage);
+        setError(errorMessage);
+        toast.error('Fehler beim Laden der Daten: ' + errorMessage);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [useSupabase]); // Remove initialData from dependencies
+  }, [useSupabase, initialData]);
 
   const filteredData = data.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.appId.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  console.log('Current data source:', useSupabase ? 'Supabase' : 'File');
-  console.log('Current data:', data);
-  console.log('Filtered data:', filteredData);
 
   return (
     <div className="space-y-4">
@@ -110,6 +116,12 @@ export const DataTable = ({ initialData = [], useSupabase = false }: DataTablePr
                   Lädt Daten...
                 </TableCell>
               </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-4 text-red-500">
+                  Fehler: {error}
+                </TableCell>
+              </TableRow>
             ) : filteredData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-4">
@@ -123,7 +135,7 @@ export const DataTable = ({ initialData = [], useSupabase = false }: DataTablePr
                   <TableCell>{item.name}</TableCell>
                   <TableCell>{item.appId}</TableCell>
                   <TableCell>{item.cloudProvider}</TableCell>
-                  <TableCell>{item.cloudType.join(';')}</TableCell>
+                  <TableCell>{item.cloudType.join(', ')}</TableCell>
                   <TableCell>{item.dyp}</TableCell>
                 </TableRow>
               ))
