@@ -74,126 +74,101 @@ export const Dashboard = ({ data }: DashboardProps) => {
     ]
   };
 
-  // Prepare quarterly trend Sankey data
+  // Prepare yearly trend Sankey data
   const yearlyTrendData = {
     nodes: [
-      // Years
       { id: "2025" },
       { id: "2026" },
       { id: "2027" },
       { id: "2028" },
-      // 2025 Quarters
-      { id: "Q1 2025" },
-      { id: "Q2 2025" },
-      { id: "Q3 2025" },
-      { id: "Q4 2025" },
-      // 2026 Quarters
-      { id: "Q1 2026" },
-      { id: "Q2 2026" },
-      { id: "Q3 2026" },
-      { id: "Q4 2026" },
-      // 2027 Quarters
-      { id: "Q1 2027" },
-      { id: "Q2 2027" },
-      { id: "Q3 2027" },
-      { id: "Q4 2027" },
-      // 2028 Quarters
-      { id: "Q1 2028" },
-      { id: "Q2 2028" },
-      { id: "Q3 2028" },
-      { id: "Q4 2028" },
+      { id: "2029" },
+      { id: "DyP 2025" },
+      { id: "Non-DyP 2025" },
+      { id: "DyP 2026" },
+      { id: "Non-DyP 2026" },
+      { id: "DyP 2027" },
+      { id: "Non-DyP 2027" },
+      { id: "DyP 2028" },
+      { id: "Non-DyP 2028" },
+      { id: "DyP 2029" },
+      { id: "Non-DyP 2029" }
     ],
     links: [
-      // 2025 Quarters
+      // 2025 (current)
       {
         source: "2025",
-        target: "Q1 2025",
+        target: "DyP 2025",
         value: dypApps
       },
       {
         source: "2025",
-        target: "Q2 2025",
-        value: Math.round(dypApps * 1.1)
+        target: "Non-DyP 2025",
+        value: nonDypApps
       },
+      // 2025 to 2026
       {
-        source: "2025",
-        target: "Q3 2025",
+        source: "DyP 2025",
+        target: "DyP 2026",
         value: Math.round(dypApps * 1.2)
       },
       {
-        source: "2025",
-        target: "Q4 2025",
-        value: Math.round(dypApps * 1.3)
+        source: "Non-DyP 2025",
+        target: "DyP 2026",
+        value: Math.round(nonDypApps * 0.2)
       },
-      // 2026 Quarters
       {
-        source: "2026",
-        target: "Q1 2026",
+        source: "Non-DyP 2025",
+        target: "Non-DyP 2026",
+        value: Math.round(nonDypApps * 0.8)
+      },
+      // 2026 to 2027
+      {
+        source: "DyP 2026",
+        target: "DyP 2027",
         value: Math.round(dypApps * 1.4)
       },
       {
-        source: "2026",
-        target: "Q2 2026",
-        value: Math.round(dypApps * 1.5)
+        source: "Non-DyP 2026",
+        target: "DyP 2027",
+        value: Math.round(nonDypApps * 0.3)
       },
       {
-        source: "2026",
-        target: "Q3 2026",
+        source: "Non-DyP 2026",
+        target: "Non-DyP 2027",
+        value: Math.round(nonDypApps * 0.7)
+      },
+      // 2027 to 2028
+      {
+        source: "DyP 2027",
+        target: "DyP 2028",
         value: Math.round(dypApps * 1.6)
       },
       {
-        source: "2026",
-        target: "Q4 2026",
-        value: Math.round(dypApps * 1.7)
+        source: "Non-DyP 2027",
+        target: "DyP 2028",
+        value: Math.round(nonDypApps * 0.4)
       },
-      // 2027 Quarters
       {
-        source: "2027",
-        target: "Q1 2027",
+        source: "Non-DyP 2027",
+        target: "Non-DyP 2028",
+        value: Math.round(nonDypApps * 0.6)
+      },
+      // 2028 to 2029
+      {
+        source: "DyP 2028",
+        target: "DyP 2029",
         value: Math.round(dypApps * 1.8)
       },
       {
-        source: "2027",
-        target: "Q2 2027",
-        value: Math.round(dypApps * 1.9)
+        source: "Non-DyP 2028",
+        target: "DyP 2029",
+        value: Math.round(nonDypApps * 0.5)
       },
       {
-        source: "2027",
-        target: "Q3 2027",
-        value: Math.round(dypApps * 2.0)
-      },
-      {
-        source: "2027",
-        target: "Q4 2027",
-        value: Math.round(dypApps * 2.1)
-      },
-      // 2028 Quarters
-      {
-        source: "2028",
-        target: "Q1 2028",
-        value: Math.round(dypApps * 2.2)
-      },
-      {
-        source: "2028",
-        target: "Q2 2028",
-        value: Math.round(dypApps * 2.3)
-      },
-      {
-        source: "2028",
-        target: "Q3 2028",
-        value: Math.round(dypApps * 2.4)
-      },
-      {
-        source: "2028",
-        target: "Q4 2028",
-        value: Math.round(dypApps * 2.5)
-      },
-      // Connections between quarters (showing flow)
-      ...Array.from({ length: 15 }, (_, i) => ({
-        source: `Q${(i % 4) + 1} ${Math.floor(i / 4) + 2025}`,
-        target: `Q${((i + 1) % 4) + 1} ${Math.floor((i + 1) / 4) + 2025}`,
-        value: Math.round(dypApps * (1 + (i * 0.1)))
-      }))
+        source: "Non-DyP 2028",
+        target: "Non-DyP 2029",
+        value: Math.round(nonDypApps * 0.5)
+      }
     ]
   };
 
