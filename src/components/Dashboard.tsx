@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ApplicationData } from '../types/data';
 import { StatCard } from './dashboard/StatCard';
@@ -13,8 +12,8 @@ interface DashboardProps {
 export const Dashboard = ({ data }: DashboardProps) => {
   // Calculate statistics
   const totalApps = data.length;
-  const uniqueCloudProviders = new Set(data.map(item => item.cloudProvider)).size;
-  const uniqueCloudTypes = new Set(data.flatMap(item => item.cloudType)).size;
+  const dypApps = data.filter(item => item.dyp === 'Yes').length;
+  const nonDypApps = data.filter(item => item.dyp === 'No').length;
 
   // Prepare Sankey data with 4 levels
   const sankeyData = {
@@ -81,9 +80,9 @@ export const Dashboard = ({ data }: DashboardProps) => {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard title="Anwendungen Gesamt" value={totalApps} />
-        <StatCard title="Cloud Provider" value={uniqueCloudProviders} className="text-green-600" />
-        <StatCard title="Cloud Typen" value={uniqueCloudTypes} className="text-blue-600" />
+        <StatCard title="All Applications" value={totalApps} />
+        <StatCard title="DyP" value={dypApps} className="text-green-600" />
+        <StatCard title="Non-DyP" value={nonDypApps} className="text-blue-600" />
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow">
