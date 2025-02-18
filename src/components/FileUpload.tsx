@@ -1,12 +1,13 @@
+
 import { useState } from 'react';
 import { Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
-import { ToolData, Category } from '../types/data';
+import { ApplicationData, CloudProvider, CloudType } from '../types/data';
 import { Progress } from "@/components/ui/progress";
 
 interface FileUploadProps {
-  onDataLoaded: (data: ToolData[]) => void;
+  onDataLoaded: (data: ApplicationData[]) => void;
 }
 
 export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
@@ -38,12 +39,16 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
     }
   };
 
-  const validateCategory = (category: string): category is Category => {
-    return ['IWC', 'EWC', 'IWR', 'EWR'].includes(category);
+  const validateCloudProvider = (provider: string): provider is CloudProvider => {
+    return ['azure', 'onPremisesCloud'].includes(provider);
   };
 
-  const processExcelData = (jsonData: any[]): { data: ToolData[], skippedRows: number } => {
-    const toolsMap = new Map<string, ToolData>();
+  const validateCloudType = (type: string): type is CloudType => {
+    return ['paas', 'caas'].includes(type);
+  };
+
+  const processExcelData = (jsonData: any[]): { data: ApplicationData[], skippedRows: number } => {
+    const applications: ApplicationData[] = [];
     let skippedRows = 0;
     const totalRows = jsonData.length;
     
@@ -51,43 +56,34 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
       try {
         setProgress(Math.round((index / totalRows) * 100));
         
-        const tool = row.Tool?.toString() || '';
-        const category = row.Category?.toString() || '';
+        const type = row.Type?.toString() || '';
+        const name = row.Name?.toString() || '';
+        const appId = row['APP ID']?.toString() || '';
+        const cloudProvider = row['Cloud Provider']?.toString() || '';
+        const cloudTypeStr = row['Cloud Type']?.toString() || '';
         
-        if (!tool || !validateCategory(category)) {
-          console.warn(`Zeile ${index + 1}: Ungültige Daten - Tool: ${tool}, Kategorie: ${category}`);
+        if (!name || !appId || !validateCloudProvider(cloudProvider)) {
+          console.warn(`Zeile ${index + 1}: Ungültige Daten`);
           skippedRows++;
           return;
         }
 
-        let toolData = toolsMap.get(tool) || {
-          id: `tool-${index}`,
-          tool,
-          category: category as Category,
-          prices: {
-            '2023': {},
-            '2024': {},
-            '2025': {}
-          }
-        };
+        const cloudTypes = cloudTypeStr.split(';').filter(validateCloudType);
+        
+        if (cloudTypes.length === 0) {
+          console.warn(`Zeile ${index + 1}: Ungültige Cloud Types`);
+          skippedRows++;
+          return;
+        }
 
-        // Process price columns in format YYYY-MM
-        Object.entries(row).forEach(([key, value]) => {
-          const match = key.match(/^(\d{4})-(\d{2})$/);
-          if (match) {
-            const [, year, month] = match;
-            if (!toolData.prices[year]) {
-              toolData.prices[year] = {};
-            }
-            
-            const price = parseFloat(value as string);
-            if (!isNaN(price)) {
-              toolData.prices[year][month] = price;
-            }
-          }
+        applications.push({
+          type: 'Application',
+          name,
+          appId,
+          cloudProvider,
+          cloudType: cloudTypes as CloudType[]
         });
 
-        toolsMap.set(tool, toolData);
       } catch (error) {
         console.warn(`Fehler beim Verarbeiten von Zeile ${index + 1}:`, error);
         skippedRows++;
@@ -95,7 +91,7 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
     });
 
     return {
-      data: Array.from(toolsMap.values()),
+      data: applications,
       skippedRows
     };
   };
@@ -131,9 +127,9 @@ export const FileUpload = ({ onDataLoaded }: FileUploadProps) => {
           } else {
             onDataLoaded(processedData);
             if (skippedRows > 0) {
-              toast.warning(`${processedData.length} Tools geladen, ${skippedRows} fehlerhafte Zeilen übersprungen`);
+              toast.warning(`${processedData.length} Anwendungen geladen, ${skippedRows} fehlerhafte Zeilen übersprungen`);
             } else {
-              toast.success(`${processedData.length} Tools erfolgreich geladen`);
+              toast.success(`${processedData.length} Anwendungen erfolgreich geladen`);
             }
           }
           
