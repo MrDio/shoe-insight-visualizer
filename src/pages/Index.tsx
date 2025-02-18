@@ -1,14 +1,15 @@
+
 import { useState } from 'react';
 import { FileUpload } from '@/components/FileUpload';
 import { DataTable } from '@/components/DataTable';
 import { Dashboard } from '@/components/Dashboard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ToolData } from '../types/data';
+import { ApplicationData } from '../types/data';
 
 const Index = () => {
-  const [data, setData] = useState<ToolData[]>([]);
+  const [data, setData] = useState<ApplicationData[]>([]);
 
-  const handleDataLoaded = (newData: ToolData[]) => {
+  const handleDataLoaded = (newData: ApplicationData[]) => {
     setData(newData);
   };
 
@@ -16,7 +17,7 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white border-b">
         <div className="container py-6">
-          <h1 className="text-2xl font-bold text-primary">Tool-Daten Analyse</h1>
+          <h1 className="text-2xl font-bold text-primary">Application Overview</h1>
         </div>
       </header>
 
@@ -25,7 +26,7 @@ const Index = () => {
         
         <Tabs defaultValue="table" className="w-full">
           <TabsList>
-            <TabsTrigger value="table">Datentabelle</TabsTrigger>
+            <TabsTrigger value="table">Data Table</TabsTrigger>
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           </TabsList>
           <TabsContent value="table">

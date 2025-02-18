@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { 
   Table,
@@ -9,23 +10,48 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Search } from 'lucide-react';
-import { ToolData } from '../types/data';
+import { ApplicationData } from '../types/data';
+
+// Sample data
+const sampleData: ApplicationData[] = [
+  {
+    type: 'Application',
+    name: 'ASDASDASDAS',
+    appId: 'APP-29262',
+    cloudProvider: 'azure',
+    cloudType: ['paas', 'caas']
+  },
+  {
+    type: 'Application',
+    name: 'ASDASDSAA',
+    appId: 'APP-23657',
+    cloudProvider: 'azure',
+    cloudType: ['caas']
+  },
+  {
+    type: 'Application',
+    name: 'ADSADADA',
+    appId: 'APP-32031',
+    cloudProvider: 'onPremisesCloud',
+    cloudType: ['caas']
+  }
+];
 
 interface DataTableProps {
-  initialData: ToolData[];
+  initialData?: ApplicationData[];
 }
 
-export const DataTable = ({ initialData }: DataTableProps) => {
+export const DataTable = ({ initialData = sampleData }: DataTableProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [data, setData] = useState<ToolData[]>(initialData);
+  const [data, setData] = useState<ApplicationData[]>(initialData);
 
   useEffect(() => {
     setData(initialData);
   }, [initialData]);
 
   const filteredData = data.filter(item => 
-    item.tool.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.id.toLowerCase().includes(searchTerm.toLowerCase())
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.appId.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -33,7 +59,7 @@ export const DataTable = ({ initialData }: DataTableProps) => {
       <div className="relative">
         <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
         <Input
-          placeholder="Nach Tool oder ID suchen..."
+          placeholder="Nach Name oder APP ID suchen..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
@@ -44,35 +70,21 @@ export const DataTable = ({ initialData }: DataTableProps) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Tool</TableHead>
-              <TableHead>Kategorie</TableHead>
-              <TableHead>Preise (2023)</TableHead>
-              <TableHead>Preise (2024)</TableHead>
-              <TableHead>Preise (2025)</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>APP ID</TableHead>
+              <TableHead>Cloud Provider</TableHead>
+              <TableHead>Cloud Type</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredData.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>{item.id}</TableCell>
-                <TableCell>{item.tool}</TableCell>
-                <TableCell>{item.category}</TableCell>
-                <TableCell>
-                  {Object.entries(item.prices['2023'] || {})
-                    .map(([month, price]) => `${month}: €${price}`)
-                    .join(', ')}
-                </TableCell>
-                <TableCell>
-                  {Object.entries(item.prices['2024'] || {})
-                    .map(([month, price]) => `${month}: €${price}`)
-                    .join(', ')}
-                </TableCell>
-                <TableCell>
-                  {Object.entries(item.prices['2025'] || {})
-                    .map(([month, price]) => `${month}: €${price}`)
-                    .join(', ')}
-                </TableCell>
+              <TableRow key={item.appId}>
+                <TableCell>{item.type}</TableCell>
+                <TableCell>{item.name}</TableCell>
+                <TableCell>{item.appId}</TableCell>
+                <TableCell>{item.cloudProvider}</TableCell>
+                <TableCell>{item.cloudType.join(';')}</TableCell>
               </TableRow>
             ))}
           </TableBody>

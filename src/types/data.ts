@@ -1,10 +1,21 @@
+export type CloudProvider = 'azure' | 'onPremisesCloud';
+export type CloudType = 'paas' | 'caas';
+
+export type ApplicationData = {
+  type: 'Application';
+  name: string;
+  appId: string;
+  cloudProvider: CloudProvider;
+  cloudType: CloudType[];
+};
+
 export type ToolData = {
   id: string;
   tool: string;
   category: 'IWC' | 'EWC' | 'IWR' | 'EWR';
   prices: {
-    [key: string]: { // Jahr
-      [key: string]: number; // Monat: Preis
+    [key: string]: {
+      [key: string]: number;
     };
   };
 };
