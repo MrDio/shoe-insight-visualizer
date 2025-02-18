@@ -4,13 +4,17 @@ import { FileUpload } from '@/components/FileUpload';
 import { DataTable } from '@/components/DataTable';
 import { Dashboard } from '@/components/Dashboard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Database, File } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 import { ApplicationData } from '../types/data';
 
 const Index = () => {
   const [data, setData] = useState<ApplicationData[]>([]);
+  const [dataSource, setDataSource] = useState<'database' | 'file'>('database');
 
   const handleDataLoaded = (newData: ApplicationData[]) => {
     setData(newData);
+    setDataSource('file');
   };
 
   return (
@@ -22,7 +26,24 @@ const Index = () => {
       </header>
 
       <main className="container py-8 space-y-8 flex-grow">
-        <FileUpload onDataLoaded={handleDataLoaded} />
+        <div className="flex gap-4 items-center">
+          <Button
+            variant={dataSource === 'database' ? 'default' : 'outline'}
+            onClick={() => setDataSource('database')}
+          >
+            <Database className="mr-2 h-4 w-4" />
+            Database
+          </Button>
+          <Button
+            variant={dataSource === 'file' ? 'default' : 'outline'}
+            onClick={() => setDataSource('file')}
+          >
+            <File className="mr-2 h-4 w-4" />
+            File
+          </Button>
+        </div>
+
+        {dataSource === 'file' && <FileUpload onDataLoaded={handleDataLoaded} />}
         
         <Tabs defaultValue="table" className="w-full">
           <TabsList>
@@ -30,7 +51,7 @@ const Index = () => {
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           </TabsList>
           <TabsContent value="table">
-            <DataTable initialData={data} />
+            <DataTable initialData={dataSource === 'file' ? data : []} useSupabase={dataSource === 'database'} />
           </TabsContent>
           <TabsContent value="dashboard">
             <Dashboard data={data} />

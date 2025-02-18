@@ -16,14 +16,21 @@ import { toast } from "sonner";
 
 interface DataTableProps {
   initialData?: ApplicationData[];
+  useSupabase?: boolean;
 }
 
-export const DataTable = ({ initialData = [] }: DataTableProps) => {
+export const DataTable = ({ initialData = [], useSupabase = false }: DataTableProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [data, setData] = useState<ApplicationData[]>(initialData);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!useSupabase) {
+      setData(initialData);
+      setIsLoading(false);
+      return;
+    }
+
     const fetchData = async () => {
       try {
         const { data: applications, error } = await supabase
@@ -53,8 +60,10 @@ export const DataTable = ({ initialData = [] }: DataTableProps) => {
       }
     };
 
-    fetchData();
-  }, []);
+    if (useSupabase) {
+      fetchData();
+    }
+  }, [useSupabase, initialData]);
 
   const filteredData = data.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
