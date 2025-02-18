@@ -20,7 +20,7 @@ export const Dashboard = ({ data }: DashboardProps) => {
   const dypApps = data.filter(d => d.dyp === 'Yes').map(d => d.name);
   const nonDypApps = data.filter(d => d.dyp === 'No').map(d => d.name);
 
-  const sankeyData = {
+  const sankeyDypData = {
     nodes: [
       { id: "Applications" },
       { id: "DyP" },
@@ -29,7 +29,6 @@ export const Dashboard = ({ data }: DashboardProps) => {
       ...nonDypApps.map(name => ({ id: name }))
     ],
     links: [
-      // Link from Applications to DyP and Non-DyP
       ...dypApps.map(name => ({
         source: "Applications",
         target: "DyP",
@@ -40,7 +39,6 @@ export const Dashboard = ({ data }: DashboardProps) => {
         target: "Non-DyP",
         value: 1
       })),
-      // Links from DyP/Non-DyP to individual applications
       ...dypApps.map(name => ({
         source: "DyP",
         target: name,
@@ -54,8 +52,45 @@ export const Dashboard = ({ data }: DashboardProps) => {
     ]
   };
 
+  // Prepare Sankey data for Cloud Type distribution
+  const paasApps = data.filter(d => d.cloudType.includes('paas')).map(d => d.name);
+  const caasApps = data.filter(d => d.cloudType.includes('caas')).map(d => d.name);
+
+  const sankeyCloudTypeData = {
+    nodes: [
+      { id: "Applications" },
+      { id: "PaaS" },
+      { id: "CaaS" },
+      ...paasApps.map(name => ({ id: name })),
+      ...caasApps.map(name => ({ id: name }))
+    ],
+    links: [
+      ...paasApps.map(name => ({
+        source: "Applications",
+        target: "PaaS",
+        value: 1
+      })),
+      ...caasApps.map(name => ({
+        source: "Applications",
+        target: "CaaS",
+        value: 1
+      })),
+      ...paasApps.map(name => ({
+        source: "PaaS",
+        target: name,
+        value: 1
+      })),
+      ...caasApps.map(name => ({
+        source: "CaaS",
+        target: name,
+        value: 1
+      }))
+    ]
+  };
+
   // Only render if we have valid data
-  const hasValidSankeyData = sankeyData.nodes.length > 0 && sankeyData.links.length > 0;
+  const hasValidDypData = sankeyDypData.nodes.length > 0 && sankeyDypData.links.length > 0;
+  const hasValidCloudTypeData = sankeyCloudTypeData.nodes.length > 0 && sankeyCloudTypeData.links.length > 0;
 
   return (
     <div className="space-y-8">
@@ -66,17 +101,28 @@ export const Dashboard = ({ data }: DashboardProps) => {
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow">
-        <Tabs defaultValue="sankey" className="w-full">
-          <TabsList className="grid w-full grid-cols-1">
-            <TabsTrigger value="sankey">DyP Verteilung</TabsTrigger>
+        <Tabs defaultValue="dyp" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="dyp">DyP Verteilung</TabsTrigger>
+            <TabsTrigger value="cloudtype">Cloud Type Verteilung</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="sankey" className="mt-6">
-            {hasValidSankeyData ? (
-              <SankeyView data={sankeyData} />
+          <TabsContent value="dyp" className="mt-6">
+            {hasValidDypData ? (
+              <SankeyView data={sankeyDypData} />
             ) : (
               <div className="h-[500px] flex items-center justify-center">
-                <p className="text-gray-500">Keine Daten für das Sankey-Diagramm verfügbar</p>
+                <p className="text-gray-500">Keine Daten für das DyP-Diagramm verfügbar</p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="cloudtype" className="mt-6">
+            {hasValidCloudTypeData ? (
+              <SankeyView data={sankeyCloudTypeData} />
+            ) : (
+              <div className="h-[500px] flex items-center justify-center">
+                <p className="text-gray-500">Keine Daten für das Cloud-Type-Diagramm verfügbar</p>
               </div>
             )}
           </TabsContent>
@@ -85,4 +131,3 @@ export const Dashboard = ({ data }: DashboardProps) => {
     </div>
   );
 };
-
