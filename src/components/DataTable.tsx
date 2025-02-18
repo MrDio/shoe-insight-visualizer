@@ -25,6 +25,8 @@ export const DataTable = ({ initialData = [], useSupabase = false }: DataTablePr
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    setIsLoading(true);
+    
     if (!useSupabase) {
       setData(initialData);
       setIsLoading(false);
@@ -60,10 +62,8 @@ export const DataTable = ({ initialData = [], useSupabase = false }: DataTablePr
       }
     };
 
-    if (useSupabase) {
-      fetchData();
-    }
-  }, [useSupabase, initialData]);
+    fetchData();
+  }, [useSupabase]); // Remove initialData from dependencies
 
   const filteredData = data.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
