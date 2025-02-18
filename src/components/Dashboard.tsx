@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ApplicationData } from '../types/data';
 import { StatCard } from './dashboard/StatCard';
@@ -75,58 +74,126 @@ export const Dashboard = ({ data }: DashboardProps) => {
     ]
   };
 
-  // Prepare yearly trend Sankey data
+  // Prepare quarterly trend Sankey data
   const yearlyTrendData = {
     nodes: [
-      { id: "2023" },
-      { id: "2024" },
+      // Years
       { id: "2025" },
-      { id: "DyP 2023" },
-      { id: "Non-DyP 2023" },
-      { id: "DyP 2024" },
-      { id: "Non-DyP 2024" },
-      { id: "DyP 2025" },
-      { id: "Non-DyP 2025" }
+      { id: "2026" },
+      { id: "2027" },
+      { id: "2028" },
+      // 2025 Quarters
+      { id: "Q1 2025" },
+      { id: "Q2 2025" },
+      { id: "Q3 2025" },
+      { id: "Q4 2025" },
+      // 2026 Quarters
+      { id: "Q1 2026" },
+      { id: "Q2 2026" },
+      { id: "Q3 2026" },
+      { id: "Q4 2026" },
+      // 2027 Quarters
+      { id: "Q1 2027" },
+      { id: "Q2 2027" },
+      { id: "Q3 2027" },
+      { id: "Q4 2027" },
+      // 2028 Quarters
+      { id: "Q1 2028" },
+      { id: "Q2 2028" },
+      { id: "Q3 2028" },
+      { id: "Q4 2028" },
     ],
     links: [
-      // 2023 to 2024
+      // 2025 Quarters
       {
-        source: "2023",
-        target: "DyP 2023",
-        value: Math.round(dypApps * 0.8) // Assuming 80% of current DyP apps were DyP in 2023
+        source: "2025",
+        target: "Q1 2025",
+        value: dypApps
       },
       {
-        source: "2023",
-        target: "Non-DyP 2023",
-        value: totalApps - Math.round(dypApps * 0.8)
-      },
-      // 2023 to 2024 transitions
-      {
-        source: "DyP 2023",
-        target: "DyP 2024",
-        value: Math.round(dypApps * 0.9) // Most DyP apps stay DyP
+        source: "2025",
+        target: "Q2 2025",
+        value: Math.round(dypApps * 1.1)
       },
       {
-        source: "Non-DyP 2023",
-        target: "DyP 2024",
-        value: Math.round(dypApps * 0.1) // Some Non-DyP became DyP
+        source: "2025",
+        target: "Q3 2025",
+        value: Math.round(dypApps * 1.2)
       },
       {
-        source: "Non-DyP 2023",
-        target: "Non-DyP 2024",
-        value: nonDypApps
+        source: "2025",
+        target: "Q4 2025",
+        value: Math.round(dypApps * 1.3)
       },
-      // 2024 to 2025 (current)
+      // 2026 Quarters
       {
-        source: "DyP 2024",
-        target: "DyP 2025",
-        value: dypApps // Current DyP count
+        source: "2026",
+        target: "Q1 2026",
+        value: Math.round(dypApps * 1.4)
       },
       {
-        source: "Non-DyP 2024",
-        target: "Non-DyP 2025",
-        value: nonDypApps // Current Non-DyP count
-      }
+        source: "2026",
+        target: "Q2 2026",
+        value: Math.round(dypApps * 1.5)
+      },
+      {
+        source: "2026",
+        target: "Q3 2026",
+        value: Math.round(dypApps * 1.6)
+      },
+      {
+        source: "2026",
+        target: "Q4 2026",
+        value: Math.round(dypApps * 1.7)
+      },
+      // 2027 Quarters
+      {
+        source: "2027",
+        target: "Q1 2027",
+        value: Math.round(dypApps * 1.8)
+      },
+      {
+        source: "2027",
+        target: "Q2 2027",
+        value: Math.round(dypApps * 1.9)
+      },
+      {
+        source: "2027",
+        target: "Q3 2027",
+        value: Math.round(dypApps * 2.0)
+      },
+      {
+        source: "2027",
+        target: "Q4 2027",
+        value: Math.round(dypApps * 2.1)
+      },
+      // 2028 Quarters
+      {
+        source: "2028",
+        target: "Q1 2028",
+        value: Math.round(dypApps * 2.2)
+      },
+      {
+        source: "2028",
+        target: "Q2 2028",
+        value: Math.round(dypApps * 2.3)
+      },
+      {
+        source: "2028",
+        target: "Q3 2028",
+        value: Math.round(dypApps * 2.4)
+      },
+      {
+        source: "2028",
+        target: "Q4 2028",
+        value: Math.round(dypApps * 2.5)
+      },
+      // Connections between quarters (showing flow)
+      ...Array.from({ length: 15 }, (_, i) => ({
+        source: `Q${(i % 4) + 1} ${Math.floor(i / 4) + 2025}`,
+        target: `Q${((i + 1) % 4) + 1} ${Math.floor((i + 1) / 4) + 2025}`,
+        value: Math.round(dypApps * (1 + (i * 0.1)))
+      }))
     ]
   };
 
