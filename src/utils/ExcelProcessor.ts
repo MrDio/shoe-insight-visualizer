@@ -1,5 +1,5 @@
 
-import { ApplicationData, CloudProvider, CloudType } from '../types/data';
+import { ApplicationData, CloudProvider, CloudType, DyPValue } from '../types/data';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
@@ -9,6 +9,10 @@ export const validateCloudProvider = (provider: string): provider is CloudProvid
 
 export const validateCloudType = (type: string): type is CloudType => {
   return ['paas', 'caas'].includes(type);
+};
+
+export const validateDyP = (value: string): value is DyPValue => {
+  return ['Yes', 'No'].includes(value);
 };
 
 export const processExcelData = (
@@ -28,6 +32,7 @@ export const processExcelData = (
       const appId = row['APP ID']?.toString() || '';
       const cloudProvider = row['Cloud Provider']?.toString() || '';
       const cloudTypeStr = row['Cloud Type']?.toString() || '';
+      const dyp = row['DyP']?.toString() || 'No'; // Default to 'No' if not specified
 
       if (!name || !appId || !validateCloudProvider(cloudProvider)) {
         console.warn(`Zeile ${index + 1}: Ungültige Daten`);
@@ -43,12 +48,15 @@ export const processExcelData = (
         return;
       }
 
+      const validDyp = validateDyP(dyp) ? dyp : 'No';
+
       applications.push({
         type: 'Application',
         name,
         appId,
         cloudProvider,
-        cloudType: cloudTypes as CloudType[]
+        cloudType: cloudTypes as CloudType[],
+        dyp: validDyp
       });
     } catch (error) {
       console.warn(`Fehler beim Verarbeiten von Zeile ${index + 1}:`, error);

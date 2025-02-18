@@ -1,5 +1,7 @@
+
 export type CloudProvider = 'azure' | 'onPremisesCloud';
 export type CloudType = 'paas' | 'caas';
+export type DyPValue = 'Yes' | 'No';
 
 export type ApplicationData = {
   type: 'Application';
@@ -7,6 +9,7 @@ export type ApplicationData = {
   appId: string;
   cloudProvider: CloudProvider;
   cloudType: CloudType[];
+  dyp: DyPValue;
 };
 
 export type ToolData = {

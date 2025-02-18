@@ -19,21 +19,24 @@ const sampleData: ApplicationData[] = [
     name: 'ASDASDASDAS',
     appId: 'APP-29262',
     cloudProvider: 'azure',
-    cloudType: ['paas', 'caas']
+    cloudType: ['paas', 'caas'],
+    dyp: 'Yes'
   },
   {
     type: 'Application',
     name: 'ASDASDSAA',
     appId: 'APP-23657',
     cloudProvider: 'azure',
-    cloudType: ['caas']
+    cloudType: ['caas'],
+    dyp: 'No'
   },
   {
     type: 'Application',
     name: 'ADSADADA',
     appId: 'APP-32031',
     cloudProvider: 'onPremisesCloud',
-    cloudType: ['caas']
+    cloudType: ['caas'],
+    dyp: 'Yes'
   }
 ];
 
@@ -75,6 +78,7 @@ export const DataTable = ({ initialData = sampleData }: DataTableProps) => {
               <TableHead>APP ID</TableHead>
               <TableHead>Cloud Provider</TableHead>
               <TableHead>Cloud Type</TableHead>
+              <TableHead>DyP</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -85,6 +89,7 @@ export const DataTable = ({ initialData = sampleData }: DataTableProps) => {
                 <TableCell>{item.appId}</TableCell>
                 <TableCell>{item.cloudProvider}</TableCell>
                 <TableCell>{item.cloudType.join(';')}</TableCell>
+                <TableCell>{item.dyp}</TableCell>
               </TableRow>
             ))}
           </TableBody>
