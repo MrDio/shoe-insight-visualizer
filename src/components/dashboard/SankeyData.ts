@@ -8,11 +8,11 @@ export const createCurrentDistributionData = (dypApps: number, nonDypApps: numbe
     { id: "Non-DyP" },
     { id: "PaaS" },
     { id: "CaaS" },
-    { id: "ITS" },
-    { id: "ITO" },
-    { id: "ITT" },
-    { id: "ITK" },
-    { id: "ITG" }
+    { id: "IT Services" },
+    { id: "IT Operations" },
+    { id: "IT Technology" },
+    { id: "IT Communication" },
+    { id: "IT Governance" }
   ],
   links: [
     // Level 1 to 2: Applications to DyP/Non-DyP
@@ -50,52 +50,52 @@ export const createCurrentDistributionData = (dypApps: number, nonDypApps: numbe
     // Level 3 to 4: PaaS/CaaS to IT Departments
     {
       source: "PaaS",
-      target: "ITS",
+      target: "IT Services",
       value: Math.round((dypApps * 0.6 + nonDypApps * 0.3) * 0.2)
     },
     {
       source: "PaaS",
-      target: "ITO",
+      target: "IT Operations",
       value: Math.round((dypApps * 0.6 + nonDypApps * 0.3) * 0.2)
     },
     {
       source: "PaaS",
-      target: "ITT",
+      target: "IT Technology",
       value: Math.round((dypApps * 0.6 + nonDypApps * 0.3) * 0.2)
     },
     {
       source: "PaaS",
-      target: "ITK",
+      target: "IT Communication",
       value: Math.round((dypApps * 0.6 + nonDypApps * 0.3) * 0.2)
     },
     {
       source: "PaaS",
-      target: "ITG",
+      target: "IT Governance",
       value: Math.round((dypApps * 0.6 + nonDypApps * 0.3) * 0.2)
     },
     {
       source: "CaaS",
-      target: "ITS",
+      target: "IT Services",
       value: Math.round((dypApps * 0.4 + nonDypApps * 0.7) * 0.2)
     },
     {
       source: "CaaS",
-      target: "ITO",
+      target: "IT Operations",
       value: Math.round((dypApps * 0.4 + nonDypApps * 0.7) * 0.2)
     },
     {
       source: "CaaS",
-      target: "ITT",
+      target: "IT Technology",
       value: Math.round((dypApps * 0.4 + nonDypApps * 0.7) * 0.2)
     },
     {
       source: "CaaS",
-      target: "ITK",
+      target: "IT Communication",
       value: Math.round((dypApps * 0.4 + nonDypApps * 0.7) * 0.2)
     },
     {
       source: "CaaS",
-      target: "ITG",
+      target: "IT Governance",
       value: Math.round((dypApps * 0.4 + nonDypApps * 0.7) * 0.2)
     }
   ]
