@@ -33,6 +33,7 @@ export const processExcelData = (
       const cloudProvider = row['Cloud Provider']?.toString() || '';
       const cloudTypeStr = row['Cloud Type']?.toString() || '';
       const dyp = row['DyP']?.toString() || 'No'; // Default to 'No' if not specified
+      const ecosystem = row['Ecosystem']?.toString() || 'Standard'; // Default value
 
       if (!name || !appId || !validateCloudProvider(cloudProvider)) {
         console.warn(`Zeile ${index + 1}: Ungültige Daten`);
@@ -56,7 +57,8 @@ export const processExcelData = (
         appId,
         cloudProvider,
         cloudType: cloudTypes as CloudType[],
-        dyp: validDyp
+        dyp: validDyp,
+        ecosystem
       });
     } catch (error) {
       console.warn(`Fehler beim Verarbeiten von Zeile ${index + 1}:`, error);

@@ -32,7 +32,8 @@ const Index = () => {
             appId: app.app_id,
             cloudProvider: app.cloud_provider as 'azure' | 'onPremisesCloud',
             cloudType: app.cloud_type as ('paas' | 'caas')[],
-            dyp: app.dyp as 'Yes' | 'No'
+            dyp: app.dyp as 'Yes' | 'No',
+            ecosystem: app.ecosystem || 'Standard' // Default value wenn nicht vorhanden
           }));
           setData(transformedData);
         }
