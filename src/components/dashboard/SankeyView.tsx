@@ -18,9 +18,24 @@ export const SankeyView = ({ data }: SankeyViewProps) => {
     );
   }
 
+  // Group nodes by their position in the flow
+  const nodeGroups = {
+    applications: data.nodes.filter(n => n.id === "Applications"),
+    names: data.nodes.filter(n => !["Applications", "DyP", "Non-DyP", "PaaS", "CaaS"].includes(n.id) && !n.id.startsWith("Ecosystem:")),
+    ecosystems: data.nodes.filter(n => n.id.startsWith("Ecosystem:")),
+    dyp: data.nodes.filter(n => n.id === "DyP" || n.id === "Non-DyP"),
+    cloudTypes: data.nodes.filter(n => n.id === "PaaS" || n.id === "CaaS"),
+  };
+
   return (
-    <>
-      <h3 className="text-lg font-semibold mb-4">Kategorie-Jahr Beziehungen</h3>
+    <div className="space-y-4">
+      <div className="grid grid-cols-5 text-center font-semibold text-sm text-gray-600">
+        <div>Applications</div>
+        <div>Name</div>
+        <div>Ecosystem</div>
+        <div>DyP Status</div>
+        <div>Cloud Type</div>
+      </div>
       <div className="h-[500px]">
         <ResponsiveSankey
           data={data}
@@ -34,8 +49,12 @@ export const SankeyView = ({ data }: SankeyViewProps) => {
           nodeBorderWidth={0}
           linkOpacity={0.5}
           enableLinkGradient={true}
+          labelFormat=""
+          nodeBorderRadius={2}
+          label={node => ''}
+          enableLabels={false}
         />
       </div>
-    </>
+    </div>
   );
 };
