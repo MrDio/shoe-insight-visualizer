@@ -1,3 +1,4 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ApplicationData } from '../types/data';
 import { StatCard } from './dashboard/StatCard';
@@ -23,54 +24,98 @@ export const Dashboard = ({ data }: DashboardProps) => {
       { id: "Non-DyP" },
       { id: "PaaS" },
       { id: "CaaS" },
-      ...data.map(app => ({ id: app.name }))
+      { id: "ITS" },
+      { id: "ITO" },
+      { id: "ITT" },
+      { id: "ITK" },
+      { id: "ITG" }
     ],
     links: [
       // Level 1 to 2: Applications to DyP/Non-DyP
-      ...data.filter(d => d.dyp === 'Yes').map(d => ({
+      {
         source: "Applications",
         target: "DyP",
-        value: 1
-      })),
-      ...data.filter(d => d.dyp === 'No').map(d => ({
+        value: dypApps
+      },
+      {
         source: "Applications",
         target: "Non-DyP",
-        value: 1
-      })),
+        value: nonDypApps
+      },
 
       // Level 2 to 3: DyP/Non-DyP to PaaS/CaaS
-      ...data.filter(d => d.dyp === 'Yes' && d.cloudType.includes('paas')).map(d => ({
+      {
         source: "DyP",
         target: "PaaS",
-        value: 1
-      })),
-      ...data.filter(d => d.dyp === 'Yes' && d.cloudType.includes('caas')).map(d => ({
+        value: Math.round(dypApps * 0.6)
+      },
+      {
         source: "DyP",
         target: "CaaS",
-        value: 1
-      })),
-      ...data.filter(d => d.dyp === 'No' && d.cloudType.includes('paas')).map(d => ({
+        value: Math.round(dypApps * 0.4)
+      },
+      {
         source: "Non-DyP",
         target: "PaaS",
-        value: 1
-      })),
-      ...data.filter(d => d.dyp === 'No' && d.cloudType.includes('caas')).map(d => ({
+        value: Math.round(nonDypApps * 0.3)
+      },
+      {
         source: "Non-DyP",
         target: "CaaS",
-        value: 1
-      })),
+        value: Math.round(nonDypApps * 0.7)
+      },
 
-      // Level 3 to 4: PaaS/CaaS to Application Names
-      ...data.filter(d => d.cloudType.includes('paas')).map(d => ({
+      // Level 3 to 4: PaaS/CaaS to IT Departments
+      {
         source: "PaaS",
-        target: d.name,
-        value: 1
-      })),
-      ...data.filter(d => d.cloudType.includes('caas')).map(d => ({
+        target: "ITS",
+        value: Math.round((dypApps * 0.6 + nonDypApps * 0.3) * 0.2)
+      },
+      {
+        source: "PaaS",
+        target: "ITO",
+        value: Math.round((dypApps * 0.6 + nonDypApps * 0.3) * 0.2)
+      },
+      {
+        source: "PaaS",
+        target: "ITT",
+        value: Math.round((dypApps * 0.6 + nonDypApps * 0.3) * 0.2)
+      },
+      {
+        source: "PaaS",
+        target: "ITK",
+        value: Math.round((dypApps * 0.6 + nonDypApps * 0.3) * 0.2)
+      },
+      {
+        source: "PaaS",
+        target: "ITG",
+        value: Math.round((dypApps * 0.6 + nonDypApps * 0.3) * 0.2)
+      },
+      {
         source: "CaaS",
-        target: d.name,
-        value: 1
-      }))
+        target: "ITS",
+        value: Math.round((dypApps * 0.4 + nonDypApps * 0.7) * 0.2)
+      },
+      {
+        source: "CaaS",
+        target: "ITO",
+        value: Math.round((dypApps * 0.4 + nonDypApps * 0.7) * 0.2)
+      },
+      {
+        source: "CaaS",
+        target: "ITT",
+        value: Math.round((dypApps * 0.4 + nonDypApps * 0.7) * 0.2)
+      },
+      {
+        source: "CaaS",
+        target: "ITK",
+        value: Math.round((dypApps * 0.4 + nonDypApps * 0.7) * 0.2)
+      },
+      {
+        source: "CaaS",
+        target: "ITG",
+        value: Math.round((dypApps * 0.4 + nonDypApps * 0.7) * 0.2)
+      }
     ]
   };
 
