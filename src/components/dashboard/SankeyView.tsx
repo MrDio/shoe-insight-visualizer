@@ -49,10 +49,13 @@ export const SankeyView = ({ data }: SankeyViewProps) => {
           nodeBorderWidth={0}
           linkOpacity={0.5}
           enableLinkGradient={true}
-          labelFormat=""
           nodeBorderRadius={2}
           label={node => ''}
           enableLabels={false}
+          labelTextColor={{
+            from: 'color',
+            modifiers: [['darker', 1]]
+          }}
         />
       </div>
     </div>
