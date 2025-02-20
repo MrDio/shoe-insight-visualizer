@@ -27,6 +27,13 @@ export const SankeyView = ({ data }: SankeyViewProps) => {
     cloudTypes: data.nodes.filter(n => n.id === "PaaS" || n.id === "CaaS"),
   };
 
+  const getNodeLabel = (node: { id: string }) => {
+    if (node.id.startsWith("Ecosystem: ")) {
+      return node.id.replace("Ecosystem: ", "");
+    }
+    return node.id;
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-5 text-center font-semibold text-sm text-gray-600">
@@ -50,8 +57,8 @@ export const SankeyView = ({ data }: SankeyViewProps) => {
           linkOpacity={0.5}
           enableLinkGradient={true}
           nodeBorderRadius={2}
-          label={node => ''}
-          enableLabels={false}
+          label={getNodeLabel}
+          enableLabels={true}
           labelTextColor={{
             from: 'color',
             modifiers: [['darker', 1]]
