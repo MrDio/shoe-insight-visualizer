@@ -46,6 +46,7 @@ export type Database = {
           cloud_type: string[]
           created_at: string
           dyp: string
+          ecosystem: string
           id: string
           name: string
           type: string
@@ -57,6 +58,7 @@ export type Database = {
           cloud_type: string[]
           created_at?: string
           dyp?: string
+          ecosystem?: string
           id?: string
           name: string
           type: string
@@ -68,6 +70,7 @@ export type Database = {
           cloud_type?: string[]
           created_at?: string
           dyp?: string
+          ecosystem?: string
           id?: string
           name?: string
           type?: string

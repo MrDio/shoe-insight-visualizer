@@ -10,6 +10,7 @@ export type ApplicationData = {
   cloudProvider: CloudProvider;
   cloudType: CloudType[];
   dyp: DyPValue;
+  ecosystem: string;
 };
 
 export type ToolData = {
@@ -26,3 +27,4 @@ export type ToolData = {
 export type Category = 'IWC' | 'EWC' | 'IWR' | 'EWR';
 export type Year = '2023' | '2024' | '2025';
 export type Month = '01' | '02' | '03' | '04' | '05' | '06' | '07' | '08' | '09' | '10' | '11' | '12';
+

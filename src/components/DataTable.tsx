@@ -62,7 +62,8 @@ export const DataTable = ({ initialData = [], useSupabase = false }: DataTablePr
           appId: app.app_id,
           cloudProvider: app.cloud_provider as 'azure' | 'onPremisesCloud',
           cloudType: app.cloud_type as ('paas' | 'caas')[],
-          dyp: app.dyp as 'Yes' | 'No'
+          dyp: app.dyp as 'Yes' | 'No',
+          ecosystem: app.ecosystem
         }));
 
         console.log('Transformed data:', transformedData);
@@ -107,24 +108,25 @@ export const DataTable = ({ initialData = [], useSupabase = false }: DataTablePr
               <TableHead>Cloud Provider</TableHead>
               <TableHead>Cloud Type</TableHead>
               <TableHead>DyP</TableHead>
+              <TableHead>Ecosystem</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4">
+                <TableCell colSpan={7} className="text-center py-4">
                   Lädt Daten...
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4 text-red-500">
+                <TableCell colSpan={7} className="text-center py-4 text-red-500">
                   Fehler: {error}
                 </TableCell>
               </TableRow>
             ) : filteredData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4">
+                <TableCell colSpan={7} className="text-center py-4">
                   Keine Daten gefunden
                 </TableCell>
               </TableRow>
@@ -137,6 +139,7 @@ export const DataTable = ({ initialData = [], useSupabase = false }: DataTablePr
                   <TableCell>{item.cloudProvider}</TableCell>
                   <TableCell>{item.cloudType.join(', ')}</TableCell>
                   <TableCell>{item.dyp}</TableCell>
+                  <TableCell>{item.ecosystem}</TableCell>
                 </TableRow>
               ))
             )}
