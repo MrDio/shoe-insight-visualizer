@@ -15,30 +15,40 @@ export const Dashboard = ({ data }: DashboardProps) => {
   const dypApps = data.filter(item => item.dyp === 'Yes').length;
   const nonDypApps = data.filter(item => item.dyp === 'No').length;
 
-  // Prepare Sankey data with 4 levels for current distribution
+  // Prepare Sankey data with the new order: Applications -> Name -> Ecosystem -> DyP -> Cloud Type
   const sankeyData = {
     nodes: [
       { id: "Applications" },
+      ...data.map(app => ({ id: app.name })),
+      ...Array.from(new Set(data.map(app => app.ecosystem))).map(eco => ({ id: `Ecosystem: ${eco}` })),
       { id: "DyP" },
       { id: "Non-DyP" },
       { id: "PaaS" },
-      { id: "CaaS" },
-      ...data.map(app => ({ id: app.name }))
+      { id: "CaaS" }
     ],
     links: [
-      // Level 1 to 2: Applications to DyP/Non-DyP
-      ...data.filter(d => d.dyp === 'Yes').map(d => ({
+      // Level 1 to 2: Applications to Names
+      ...data.map(d => ({
         source: "Applications",
-        target: "DyP",
-        value: 1
-      })),
-      ...data.filter(d => d.dyp === 'No').map(d => ({
-        source: "Applications",
-        target: "Non-DyP",
+        target: d.name,
         value: 1
       })),
 
-      // Level 2 to 3: DyP/Non-DyP to PaaS/CaaS
+      // Level 2 to 3: Names to Ecosystem
+      ...data.map(d => ({
+        source: d.name,
+        target: `Ecosystem: ${d.ecosystem}`,
+        value: 1
+      })),
+
+      // Level 3 to 4: Ecosystem to DyP/Non-DyP
+      ...data.map(d => ({
+        source: `Ecosystem: ${d.ecosystem}`,
+        target: d.dyp === 'Yes' ? 'DyP' : 'Non-DyP',
+        value: 1
+      })),
+
+      // Level 4 to 5: DyP/Non-DyP to Cloud Types
       ...data.filter(d => d.dyp === 'Yes' && d.cloudType.includes('paas')).map(d => ({
         source: "DyP",
         target: "PaaS",
@@ -57,18 +67,6 @@ export const Dashboard = ({ data }: DashboardProps) => {
       ...data.filter(d => d.dyp === 'No' && d.cloudType.includes('caas')).map(d => ({
         source: "Non-DyP",
         target: "CaaS",
-        value: 1
-      })),
-
-      // Level 3 to 4: PaaS/CaaS to Application Names
-      ...data.filter(d => d.cloudType.includes('paas')).map(d => ({
-        source: "PaaS",
-        target: d.name,
-        value: 1
-      })),
-      ...data.filter(d => d.cloudType.includes('caas')).map(d => ({
-        source: "CaaS",
-        target: d.name,
         value: 1
       }))
     ]
