@@ -9,9 +9,26 @@ import { Button } from "@/components/ui/button";
 import { ApplicationData } from '../types/data';
 import { supabase } from "@/integrations/supabase/client";
 
+const generateSampleData = (): ApplicationData[] => {
+  const ecosystems = ['SWF', 'Standard', 'Legacy', 'Cloud Native', 'Microservices'];
+  const cloudProviders: ('azure' | 'onPremisesCloud')[] = ['azure', 'onPremisesCloud'];
+  const cloudTypes: ('paas' | 'caas')[][] = [['paas'], ['caas'], ['paas', 'caas']];
+  const dypValues: ('Yes' | 'No')[] = ['Yes', 'No'];
+  
+  return Array.from({ length: 350 }, (_, index) => ({
+    type: 'Application',
+    name: `App-${String(index + 1).padStart(3, '0')}`,
+    appId: `ID${String(index + 1).padStart(5, '0')}`,
+    cloudProvider: cloudProviders[Math.floor(Math.random() * cloudProviders.length)],
+    cloudType: cloudTypes[Math.floor(Math.random() * cloudTypes.length)],
+    dyp: dypValues[Math.floor(Math.random() * dypValues.length)],
+    ecosystem: ecosystems[Math.floor(Math.random() * ecosystems.length)]
+  }));
+};
+
 const Index = () => {
   const [data, setData] = useState<ApplicationData[]>([]);
-  const [dataSource, setDataSource] = useState<'database' | 'file'>('file'); // Changed default to 'file'
+  const [dataSource, setDataSource] = useState<'database' | 'file'>('file');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,6 +54,9 @@ const Index = () => {
           }));
           setData(transformedData);
         }
+      } else {
+        // Generiere Beispieldaten für den File-Modus
+        setData(generateSampleData());
       }
     };
 
@@ -82,7 +102,7 @@ const Index = () => {
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           </TabsList>
           <TabsContent value="table">
-            <DataTable initialData={[]} useSupabase={dataSource === 'database'} />
+            <DataTable initialData={data} useSupabase={dataSource === 'database'} />
           </TabsContent>
           <TabsContent value="dashboard">
             <Dashboard data={data} />
