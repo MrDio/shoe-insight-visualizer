@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [data, setData] = useState<ApplicationData[]>([]);
-  const [dataSource, setDataSource] = useState<'database' | 'file'>('database');
+  const [dataSource, setDataSource] = useState<'database' | 'file'>('file'); // Changed default to 'file'
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,7 +33,7 @@ const Index = () => {
             cloudProvider: app.cloud_provider as 'azure' | 'onPremisesCloud',
             cloudType: app.cloud_type as ('paas' | 'caas')[],
             dyp: app.dyp as 'Yes' | 'No',
-            ecosystem: app.ecosystem || 'Standard' // Default value wenn nicht vorhanden
+            ecosystem: app.ecosystem || 'Standard'
           }));
           setData(transformedData);
         }
@@ -82,7 +82,7 @@ const Index = () => {
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           </TabsList>
           <TabsContent value="table">
-            <DataTable initialData={dataSource === 'file' ? data : []} useSupabase={dataSource === 'database'} />
+            <DataTable initialData={[]} useSupabase={dataSource === 'database'} />
           </TabsContent>
           <TabsContent value="dashboard">
             <Dashboard data={data} />
