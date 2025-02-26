@@ -19,6 +19,23 @@ interface DataTableProps {
   useSupabase?: boolean;
 }
 
+const generateSampleData = (): ApplicationData[] => {
+  const ecosystems = ['SWF', 'Standard', 'Legacy', 'Cloud Native', 'Microservices'];
+  const cloudProviders: ('azure' | 'onPremisesCloud')[] = ['azure', 'onPremisesCloud'];
+  const cloudTypes: ('paas' | 'caas')[][] = [['paas'], ['caas'], ['paas', 'caas']];
+  const dypValues: ('Yes' | 'No')[] = ['Yes', 'No'];
+  
+  return Array.from({ length: 350 }, (_, index) => ({
+    type: 'Application',
+    name: `App-${String(index + 1).padStart(3, '0')}`,
+    appId: `ID${String(index + 1).padStart(5, '0')}`,
+    cloudProvider: cloudProviders[Math.floor(Math.random() * cloudProviders.length)],
+    cloudType: cloudTypes[Math.floor(Math.random() * cloudTypes.length)],
+    dyp: dypValues[Math.floor(Math.random() * dypValues.length)],
+    ecosystem: ecosystems[Math.floor(Math.random() * ecosystems.length)]
+  }));
+};
+
 export const DataTable = ({ initialData = [], useSupabase = false }: DataTableProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [data, setData] = useState<ApplicationData[]>(initialData);
@@ -28,7 +45,8 @@ export const DataTable = ({ initialData = [], useSupabase = false }: DataTablePr
   useEffect(() => {
     const fetchData = async () => {
       if (!useSupabase) {
-        setData(initialData);
+        // If no initial data is provided, generate sample data
+        setData(initialData.length > 0 ? initialData : generateSampleData());
         setIsLoading(false);
         return;
       }
