@@ -25,7 +25,7 @@ const generateSampleData = (): ApplicationData[] => {
   const cloudTypes: ('paas' | 'caas')[][] = [['paas'], ['caas'], ['paas', 'caas']];
   const dypValues: ('Yes' | 'No')[] = ['Yes', 'No'];
   
-  return Array.from({ length: 350 }, (_, index) => ({
+  return Array.from({ length: 153 }, (_, index) => ({
     type: 'Application',
     name: `App-${String(index + 1).padStart(3, '0')}`,
     appId: `ID${String(index + 1).padStart(5, '0')}`,
